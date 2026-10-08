@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E6B3A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Diário Esportivo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --campo:#0E6B3A; --campo-2:#0A5530; --giz:#FFFFFF; --ouro:#F2C230; --tinta:#1B2430;
+  --fundo:#EDF1EC; --painel:#FFFFFF; --linha:#D5DDD4; --suave:#5D6B66;
+  --vit:#1E9E57; --emp:#C99A12; --der:#D6453D; --sombra:0 1px 0 rgba(27,36,48,.08);
+  --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --corpo:Barlow,"Segoe UI",Roboto,Arial,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --fundo:#0F1714; --painel:#17221E; --linha:#2A3933; --tinta:#E8EEEA; --suave:#9AA9A3; --sombra:none; --campo-2:#0C4A2A;
+}}
+:root[data-theme="dark"]{ --fundo:#0F1714; --painel:#17221E; --linha:#2A3933; --tinta:#E8EEEA; --suave:#9AA9A3; --sombra:none; --campo-2:#0C4A2A; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--fundo);color:var(--tinta);font:16px/1.45 var(--corpo);-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--ouro);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding:0 14px 110px}
+h1,h2,h3{font-family:var(--cond);margin:0;line-height:1.05}
+h2{font-size:1.45rem;font-weight:700;margin:26px 0 10px}
+.muted{color:var(--suave)}
+.proto{font-size:.8rem;color:var(--suave);padding:10px 2px 0;display:flex;justify-content:space-between;gap:8px}
+
+/* figurinha */
+.figurinha{margin-top:12px;background:var(--campo);color:var(--giz);border-radius:18px;padding:16px;position:relative;overflow:hidden;border:3px solid var(--ouro)}
+.figurinha::before{content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 100% 50%,transparent 58px,rgba(255,255,255,.18) 59px,rgba(255,255,255,.18) 61px,transparent 62px),
+ linear-gradient(90deg,transparent calc(100% - 1px),rgba(255,255,255,.18) 0);pointer-events:none}
+.fig-topo{display:flex;gap:14px;align-items:center;position:relative}
+.foto{width:84px;height:104px;border-radius:12px;background:var(--campo-2);display:grid;place-items:center;font:800 2.2rem var(--cond);overflow:hidden;flex:none;border:2px solid rgba(255,255,255,.35)}
+.foto img{width:100%;height:100%;object-fit:cover}
+.fig-nome{font:800 2.1rem/1 var(--cond)}
+.fig-info{font-size:.95rem;opacity:.9;margin-top:4px}
+.camisa{position:absolute;right:6px;top:-2px;font:800 5.4rem/1 var(--cond);color:var(--ouro);opacity:.95}
+.fig-rodape{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;position:relative}
+.fig-rodape div{background:rgba(0,0,0,.18);border-radius:10px;padding:8px 4px;text-align:center}
+.fig-rodape b{display:block;font:700 1.6rem/1 var(--cond)}
+.fig-rodape span{font-size:.75rem;opacity:.85}
+
+/* filtros */
+.filtros{display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px;scrollbar-width:none}
+.filtros select{flex:none;background:var(--painel);border:1px solid var(--linha);border-radius:999px;padding:8px 30px 8px 12px;appearance:none;
+ background-image:linear-gradient(45deg,transparent 50%,var(--suave) 50%),linear-gradient(135deg,var(--suave) 50%,transparent 50%);
+ background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px;background-repeat:no-repeat;font-size:.9rem}
+
+.grade{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cx{background:var(--painel);border:1px solid var(--linha);border-radius:12px;padding:10px;box-shadow:var(--sombra)}
+.cx b{display:block;font:700 1.7rem/1.1 var(--cond)}
+.cx span{font-size:.8rem;color:var(--suave)}
+.placar-geral{display:grid;grid-template-columns:repeat(3,1fr);border-radius:12px;overflow:hidden;color:#fff;text-align:center}
+.placar-geral div{padding:10px 4px}.placar-geral b{font:800 2rem/1 var(--cond);display:block}.placar-geral span{font-size:.8rem}
+.forma{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.forma i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 .85rem var(--cond);color:#fff;font-style:normal}
+.V{background:var(--vit)}.E{background:var(--emp)}.D{background:var(--der)}
+.barras{display:flex;align-items:flex-end;gap:6px;height:120px;padding:8px 2px 0;border-bottom:1px solid var(--linha)}
+.barras div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:.75rem;color:var(--suave)}
+.barras s{display:block;width:100%;background:var(--campo);border-radius:5px 5px 0 0;min-height:2px;text-decoration:none}
+.barras em{font-style:normal;font:700 .9rem var(--cond);color:var(--tinta)}
+.rot{display:flex;gap:6px}.rot span{flex:1;text-align:center;font-size:.72rem;color:var(--suave);padding-top:3px}
+
+/* jogos */
+.mes{font:700 1rem var(--cond);color:var(--suave);margin:18px 0 6px;text-transform:capitalize}
+.jogo{display:grid;grid-template-columns:6px 1fr auto;gap:12px;align-items:center;background:var(--painel);border:1px solid var(--linha);border-radius:12px;padding:10px 12px 10px 0;margin-bottom:8px;width:100%;text-align:left;cursor:pointer;box-shadow:var(--sombra)}
+.jogo>i{align-self:stretch;border-radius:0 4px 4px 0}
+.jogo .adv{font:700 1.15rem/1.1 var(--cond)}
+.jogo small{display:block;color:var(--suave);font-size:.8rem;margin-top:2px}
+.jogo .pl{font:800 1.5rem var(--cond);white-space:nowrap;text-align:right}
+.jogo .pl small{text-align:right}
+.tag{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:999px;background:var(--fundo);border:1px solid var(--linha);margin-right:4px}
+.tag.ouro{background:var(--ouro);color:#1B2430;border-color:var(--ouro)}
+.busca{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--linha);background:var(--painel);margin-top:12px}
+
+/* nav */
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--painel);border-top:1px solid var(--linha);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+nav button{background:none;border:0;padding:10px 0 8px;font-size:.75rem;color:var(--suave);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav button svg{width:22px;height:22px}
+nav button[aria-current="page"]{color:var(--campo);font-weight:600}
+@media (prefers-color-scheme: dark){nav button[aria-current="page"]{color:var(--ouro)}}
+nav .mais{justify-self:center;width:56px;height:56px;border-radius:50%;background:var(--ouro);color:#1B2430;margin-top:-22px;border:4px solid var(--fundo);padding:0;justify-content:center}
+nav .mais svg{width:26px;height:26px}
+
+/* folha / formulários */
+.veu{position:fixed;inset:0;background:rgba(10,20,15,.5);z-index:20;display:none}
+.folha{position:fixed;left:0;right:0;bottom:0;max-height:92%;background:var(--fundo);border-radius:20px 20px 0 0;z-index:21;overflow:auto;transform:translateY(105%);transition:transform .25s ease;padding-bottom:env(safe-area-inset-bottom,0px)}
+.folha.on{transform:none}.veu.on{display:block}
+@media (prefers-reduced-motion:reduce){.folha{transition:none}}
+.folha .in{max-width:560px;margin:0 auto;padding:6px 16px 24px}
+.folha header{position:sticky;top:0;background:var(--fundo);display:flex;justify-content:space-between;align-items:center;padding:12px 0 8px;z-index:1}
+.folha header h3{font-size:1.5rem}
+.x{background:none;border:0;font-size:1.6rem;line-height:1;padding:4px 8px;cursor:pointer;color:var(--suave)}
+fieldset{border:0;padding:0;margin:0 0 14px}
+legend{font:700 1.15rem var(--cond);margin-bottom:8px;padding:0}
+label{display:block;font-size:.85rem;color:var(--suave);margin-bottom:10px}
+label>input,label>select,label>textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:10px;border:1px solid var(--linha);background:var(--painel);color:var(--tinta);font-size:1rem;min-height:44px}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tripla{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.placar-in{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:var(--campo);color:#fff;border-radius:14px;padding:12px}
+.placar-in label{color:rgba(255,255,255,.85);text-align:center;margin:0}
+.placar-in input{text-align:center;font:800 2.2rem var(--cond);background:rgba(0,0,0,.2);border:0;color:#fff}
+.placar-in .vs{font:700 1.4rem var(--cond)}
+.res-auto{text-align:center;margin-top:8px;font:700 1.1rem var(--cond)}
+.passo{display:flex;align-items:center;justify-content:space-between;background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:4px;margin-top:4px}
+.passo button{width:40px;height:40px;border-radius:8px;border:0;background:var(--fundo);font-size:1.3rem;cursor:pointer}
+.passo output{font:700 1.4rem var(--cond)}
+.chk{display:flex;align-items:center;gap:10px;background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:10px 12px;color:var(--tinta);font-size:.95rem}
+.chk input{width:20px;height:20px;margin:0;min-height:0}
+.dias{display:flex;gap:6px;flex-wrap:wrap}
+.dias label{margin:0}
+.dias input{position:absolute;opacity:0}
+.dias span{display:block;padding:8px 12px;border-radius:999px;border:1px solid var(--linha);background:var(--painel);color:var(--tinta);cursor:pointer}
+.dias input:checked+span{background:var(--campo);color:#fff;border-color:var(--campo)}
+.dias input:focus-visible+span{outline:3px solid var(--ouro)}
+.btn{display:block;width:100%;padding:13px;border-radius:12px;border:0;background:var(--campo);color:#fff;font:700 1.15rem var(--cond);cursor:pointer;min-height:48px}
+.btn.sec{background:var(--painel);color:var(--tinta);border:1px solid var(--linha)}
+.btn.perigo{background:none;color:var(--der);border:1px solid var(--der)}
+.acoes{display:grid;gap:8px;margin-top:16px}
+.lst{background:var(--painel);border:1px solid var(--linha);border-radius:12px;overflow:hidden}
+.lst div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--linha)}
+.lst div:last-child{border-bottom:0}
+.lst b{font-weight:600}
+.lst div>span+span{margin-left:auto;font-weight:600}
+.lst button{background:none;border:0;color:var(--suave);cursor:pointer;font-size:1.1rem;padding:4px}
+.vazio{padding:14px;color:var(--suave);text-align:center;font-size:.9rem}
+.linha-t{display:flex;justify-content:space-between;align-items:center;margin:26px 0 10px}
+.linha-t h2{margin:0}
+.lnk{background:none;border:0;color:var(--campo);font-weight:600;cursor:pointer;padding:6px 0}
+@media (prefers-color-scheme: dark){.lnk{color:var(--ouro)}}
+.custo-bar{margin-bottom:10px}
+.custo-bar div{display:flex;justify-content:space-between;font-size:.9rem}
+.custo-bar s{display:block;height:10px;border-radius:5px;background:var(--fundo);margin-top:4px;overflow:hidden;text-decoration:none;border:1px solid var(--linha)}
+.custo-bar s i{display:block;height:100%;background:var(--campo)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chips button{padding:6px 12px;border-radius:999px;border:1px solid var(--linha);background:var(--painel);font-size:.85rem;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--tinta);color:var(--fundo);border-color:var(--tinta)}
+.orc{background:var(--painel);border:1px solid var(--linha);border-radius:12px;padding:14px}
+.orc .big{font:800 2rem var(--cond)}
+.medidor{height:14px;border-radius:7px;background:var(--fundo);border:1px solid var(--linha);overflow:hidden;margin:10px 0 6px}
+.medidor i{display:block;height:100%}
+.trofeu{display:flex;gap:12px;align-items:center}
+.trofeu .pos{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:800 .95rem var(--cond);flex:none;background:var(--ouro);color:#1B2430;text-align:center;line-height:1}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--tinta);color:var(--fundo);padding:10px 16px;border-radius:999px;font-size:.9rem;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.google{display:flex;align-items:center;gap:10px;justify-content:center}
+:root[data-theme="dark"] nav button[aria-current="page"],:root[data-theme="dark"] .lnk{color:var(--ouro)}
+:root[data-theme="light"] nav button[aria-current="page"],:root[data-theme="light"] .lnk{color:var(--campo)}
+.media-nota{display:inline-flex;align-items:baseline;gap:6px;margin-top:8px;background:var(--ouro);color:#1B2430;border-radius:999px;padding:3px 12px}
+.media-nota b{font:800 1.35rem/1.1 var(--cond)}.media-nota span{font-size:.78rem;font-weight:600}
+.nota{display:inline-block;min-width:40px;text-align:center;font:800 1.05rem/1 var(--cond);padding:5px 6px;border-radius:8px;color:#fff;margin-top:4px}
+.nota.alta{background:var(--vit)}.nota.media{background:var(--emp)}.nota.baixa{background:var(--der)}
+.nota-prev{display:flex;gap:12px;align-items:center;background:var(--painel);border:1px solid var(--linha);border-radius:12px;padding:12px;margin-top:10px}
+.nota-prev .nota{font-size:1.7rem;min-width:62px;padding:10px 6px;margin:0}
+.nota-prev ul{margin:0;padding:0;list-style:none;font-size:.85rem;color:var(--suave);flex:1}
+.nota-prev li{display:flex;justify-content:space-between;gap:8px}
+.cores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cor{border:2px solid var(--linha);background:var(--painel);border-radius:12px;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.85rem}
+.cor[aria-pressed="true"]{border-color:var(--tinta)}
+.cor i{display:flex;width:100%;height:30px;border-radius:8px;overflow:hidden}
+.cor i s{flex:3;text-decoration:none}.cor i u{flex:1;text-decoration:none}
+.barra-status{max-width:560px;margin:0 auto;padding:0 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.status{display:block;width:100%;margin-top:8px;border:0;border-radius:999px;padding:7px 12px;font-size:.82rem;font-weight:600;text-align:center;cursor:pointer}
+.status[hidden]{display:none}
+.status.ok{background:#DDF1E4;color:#0A5530}.status.pend{background:#FFF1C7;color:#6B5200}
+.status.off{background:#F3DCDA;color:#8A231D}.status.erro{background:#D6453D;color:#fff}.status.loc{background:var(--painel);color:var(--suave);border:1px solid var(--linha)}
+.login{min-height:calc(100vh - 40px);display:flex;flex-direction:column;justify-content:center;gap:12px;padding:30px 6px;text-align:center}
+.login-marca{width:132px;height:160px;margin:0 auto 10px;border-radius:18px;background:var(--campo);border:3px solid var(--ouro);display:grid;place-items:center;font:800 5rem/1 var(--cond);color:var(--ouro)}
+.login h1{font-size:2.6rem;font-weight:800}
+.login p{margin:0 auto 10px;max-width:34ch;color:var(--suave)}
+.login .login-nota{font-size:.82rem;margin-top:6px}
+.login-id{text-align:left}
+.btn.ouro{background:var(--ouro);color:#1B2430}
+.btn.fantasma{background:none;color:var(--tinta);border:1px solid var(--linha)}
+.btn:disabled{opacity:.6}
+</style>
+</head>
+<body>
+<div class="barra-status"><button class="status" id="status" hidden onclick="cliqueStatus()"></button></div>
+<div class="app" id="app"></div>
+
+<nav aria-label="Navegação principal"><div class="in">
+  <button data-v="inicio" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button data-v="jogos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/></svg>Jogos</button>
+  <button class="mais" id="novo" aria-label="Registrar jogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-v="custos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Custos</button>
+  <button data-v="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Atleta</button>
+</div></nav>
+
+<div class="veu" id="veu"></div>
+<section class="folha" id="folha" role="dialog" aria-modal="true" aria-labelledby="folhaT"><div class="in" id="folhaIn"></div></section>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const SEED = {"jogos": [{"id": "j000", "time": "Projeto Vila Futsal", "adv": "Recanto Verde", "comp": "LIFF Estadual - Futsal", "temporada": 2026, "data": "2026-01-31", "hora": "14:00", "local": "Ginásio Parangaba", "mod": "Futsal", "cat": "Sub-10", "gp": 2, "gc": 1, "gols": 0, "ast": 4, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 30.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "4 Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j001", "time": "Projeto Vila Futsal", "adv": "Falcões", "comp": "LIFF Estadual - Futsal", "temporada": 2026, "data": "2026-02-07", "hora": "11:00", "local": "Ginásio Parangaba", "mod": "Futsal", "cat": "Sub-10", "gp": 2, "gc": 1, "gols": 0, "ast": 3, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "3 Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j002", "time": "Projeto Vila Futsal", "adv": "Tigres", "comp": "Lecef - Fut 7", "temporada": 2026, "data": "2026-02-21", "hora": "07:30", "local": "Alvo Aldeota", "mod": "Fut7", "cat": "Sub-10", "gp": 7, "gc": 1, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 30.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j003", "time": "Projeto Vila Futsal", "adv": "Fla Vp", "comp": "Lecef - Fut 7", "temporada": 2026, "data": "2026-03-07", "hora": "08:30", "local": "Alvo Mondubim", "mod": "Fut7", "cat": "Sub-10", "gp": 7, "gc": 5, "gols": 0, "ast": 3, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "3 Assistencias - 2 pra Gol", "status": "concluido"}, {"id": "j004", "time": "Spor Club Resenha", "adv": "Bicolor", "comp": "Liga Mucunã - Futsal", "temporada": 2026, "data": "2026-03-07", "hora": "12:00", "local": "Ginásio Mucunã", "mod": "Futsal", "cat": "Sub-11", "gp": 4, "gc": 0, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 15, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 30.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j005", "time": "Projeto Vila Futsal", "adv": "Du10", "comp": "LIFF Estadual - Futsal", "temporada": 2026, "data": "2026-03-21", "hora": "12:00", "local": "Ginásio Parangaba", "mod": "Futsal", "cat": "Sub-10", "gp": 2, "gc": 6, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 15, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j006", "time": "Spor Club Resenha", "adv": "Du10", "comp": "Liga Mucunã - Futsal", "temporada": 2026, "data": "2026-03-25", "hora": "08:45", "local": "Ginásio Mucunã", "mod": "Futsal", "cat": "Sub-11", "gp": 2, "gc": 6, "gols": 0, "ast": 2, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "2 Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j007", "time": "Projeto Vila Futsal", "adv": "CRB Pajuçara", "comp": "Copa R7 Kids - Fut 7", "temporada": 2026, "data": "2026-03-28", "hora": "10:00", "local": "Arena R7", "mod": "Fut7", "cat": "Sub-10", "gp": 5, "gc": 1, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 15, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 30.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j008", "time": "Projeto Vila Futsal", "adv": "A7", "comp": "LIFF Estadual - Futsal", "temporada": 2026, "data": "2026-03-28", "hora": "15:30", "local": "Ginásio Parangaba", "mod": "Futsal", "cat": "Sub-10", "gp": 1, "gc": 5, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j009", "time": "Spor Club Resenha", "adv": "Falcões", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-03-29", "hora": "12:00", "local": "Col.Nilson Holanda", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 4, "gols": 0, "ast": 2, "def_": 0, "defd": 0, "min": 15, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "2 Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j010", "time": "Spor Club Resenha", "adv": "Du10", "comp": "Liga RF - Futsal", "temporada": 2026, "data": "2026-04-11", "hora": "12:00", "local": "Ginásio Mucunã", "mod": "Futsal", "cat": "Sub-11", "gp": 2, "gc": 4, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 2, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j011", "time": "Spor Club Resenha", "adv": "Ibis", "comp": "Liga Mucunã - Futsal", "temporada": 2026, "data": "2026-04-15", "hora": "19:00", "local": "Ginásio Mucunã", "mod": "Futsal", "cat": "Sub-11", "gp": 5, "gc": 2, "gols": 0, "ast": 2, "def_": 0, "defd": 0, "min": 15, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "2 Assistências", "status": "concluido"}, {"id": "j012", "time": "Projeto Vila Futsal", "adv": "Flamengo", "comp": "LIFF Estadual - Futsal", "temporada": 2026, "data": "2026-04-21", "hora": "13:00", "local": "Ginásio Parangaba", "mod": "Futsal", "cat": "Sub-10", "gp": 1, "gc": 2, "gols": 0, "ast": 2, "def_": 0, "defd": 0, "min": 15, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "2 Assistências", "status": "concluido"}, {"id": "j013", "time": "Spor Club Resenha", "adv": "Lmd", "comp": "Maracanuense - Futsal", "temporada": 2026, "data": "2026-04-25", "hora": "13:00", "local": "Instituto Lucimário - Acaracuzinho", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 1, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 0.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistências", "status": "concluido"}, {"id": "j014", "time": "Spor Club Resenha", "adv": "Du10", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-04-26", "hora": "15:00", "local": "Col.Nilson Holanda", "mod": "Futsal", "cat": "Sub-11", "gp": 2, "gc": 3, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 8, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j015", "time": "Spor Club Resenha", "adv": "Du10", "comp": "Liga RF - Futsal", "temporada": 2026, "data": "2026-05-01", "hora": "11:00", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 2, "gc": 1, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 8, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j016", "time": "Spor Club Resenha", "adv": "Pvf", "comp": "Maracanuense - Futsal", "temporada": 2026, "data": "2026-05-02", "hora": "10:00", "local": "Praça Juventude - Acaracuzinho", "mod": "Futsal", "cat": "Sub-11", "gp": 5, "gc": 2, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 12.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j017", "time": "Projeto Vila Futsal", "adv": "Bicolor", "comp": "Copa R7 Kids - Fut 7", "temporada": 2026, "data": "2026-05-02", "hora": "13:00", "local": "Arena R7", "mod": "Fut7", "cat": "Sub-10", "gp": 2, "gc": 5, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistências", "status": "concluido"}, {"id": "j018", "time": "Spor Club Resenha", "adv": "Falcões", "comp": "Kings Legue - Futsal 1º", "temporada": 2026, "data": "2026-05-03", "hora": "10:00", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 3, "gc": 0, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j019", "time": "Projeto Vila Futsal", "adv": "Ferroviário", "comp": "LIFF Estadual - Futsal", "temporada": 2026, "data": "2026-05-03", "hora": "14:00", "local": "Ginásio Parangaba", "mod": "Futsal", "cat": "Sub-10", "gp": 0, "gc": 6, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistências", "status": "concluido"}, {"id": "j020", "time": "Spor Club Resenha", "adv": "ABC Industrial", "comp": "Maracanuense - Futsal", "temporada": 2026, "data": "2026-05-09", "hora": "12:00", "local": "Instituto Lucimário - Acaracuzinho", "mod": "Futsal", "cat": "Sub-11", "gp": 4, "gc": 3, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 15.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j021", "time": "Spor Club Resenha", "adv": "Du10", "comp": "Kings Legue - Futsal 1º", "temporada": 2026, "data": "2026-05-27", "hora": "14:00", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 2, "gc": 4, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 2, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j022", "time": "Projeto Vila Futsal", "adv": "SC Social", "comp": "Liga Ceará Social", "temporada": 2026, "data": "2026-05-17", "hora": "09:00", "local": "Ginásio Cuca - José Walter", "mod": "Futsal", "cat": "Sub-11", "gp": 4, "gc": 1, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": true, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j023", "time": "Projeto Vila Futsal", "adv": "Asev", "comp": "Copa R7 Kids - Fut 7", "temporada": 2026, "data": "2026-05-23", "hora": "13:30", "local": "Arena R7", "mod": "Fut7", "cat": "Sub-10", "gp": 4, "gc": 2, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j024", "time": "Spor Club Resenha", "adv": "Juventus", "comp": "Liga Mucunã - Futsal", "temporada": 2026, "data": "2026-05-27", "hora": "19:30", "local": "Ginásio Mucunã", "mod": "Futsal", "cat": "Sub-11", "gp": 6, "gc": 1, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j025", "time": "Projeto Vila Futsal", "adv": "Cairat", "comp": "Liga Ceará Social", "temporada": 2026, "data": "2026-05-30", "hora": "11:30", "local": "Ginásio Cazuzão - Caucaia", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 4, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 16, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j026", "time": "Projeto Vila Futsal", "adv": "Bl4", "comp": "Lecef - Fut 7", "temporada": 2026, "data": "2026-06-06", "hora": "07:30", "local": "Alvo Mondubim", "mod": "Fut7", "cat": "Sub-10", "gp": 3, "gc": 2, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "Quartas De Final", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j027", "time": "Spor Club Resenha", "adv": "Pfc", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-06-13", "hora": "08:00", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 3, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistências", "status": "concluido"}, {"id": "j028", "time": "Spor Club Resenha", "adv": "M5", "comp": "Maracanuense - Futsal", "temporada": 2026, "data": "2026-06-13", "hora": "11:50", "local": "Ginásio IFCE - Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 5, "gc": 0, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "Quartas De Final", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j029", "time": "Spor Club Resenha", "adv": "Pvf", "comp": "Maracanuense - Futsal", "temporada": 2026, "data": "2026-06-20", "hora": "10:40", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 1, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 14, "destaque": false, "fase": "Semi Final", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistências", "status": "concluido"}, {"id": "j030", "time": "Projeto Vila Futsal", "adv": "Meninos Vila", "comp": "Copa Arena do Pai - Fut7", "temporada": 2026, "data": "2026-06-21", "hora": "08:30", "local": "Arena do Pai", "mod": "Fut7", "cat": "Sub-10", "gp": 13, "gc": 2, "gols": 3, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j031", "time": "Spor Club Resenha", "adv": "Ferroviário", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-06-28", "hora": "10:00", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 0, "gc": 4, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 8, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j032", "time": "Spor Club Resenha", "adv": "Pvf", "comp": "Copa M10", "temporada": 2026, "data": "2026-07-03", "hora": "20:40", "local": "Ginasio Zacarias Goncalves", "mod": "Futsal", "cat": "Sub-11", "gp": 6, "gc": 1, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j033", "time": "Projeto Vila Futsal", "adv": "InterSoccer", "comp": "Lecef - Fut 7", "temporada": 2026, "data": "2026-07-04", "hora": "07:30", "local": "Alvo Aldeota", "mod": "Fut7", "cat": "Sub-10", "gp": 1, "gc": 0, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "Semi - Final", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j034", "time": "Projeto Vila Futsal", "adv": "Sport Jovem", "comp": "Liga Ceará Social", "temporada": 2026, "data": "2026-07-04", "hora": "11:00", "local": "Tirol", "mod": "Futsal", "cat": "Sub-11", "gp": 0, "gc": 4, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j035", "time": "Spor Club Resenha", "adv": "Aabb", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-07-04", "hora": "17:00", "local": "Liceu do Ceará", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 0, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j036", "time": "Spor Club Resenha", "adv": "Maranguape", "comp": "Liga RF - Futsal", "temporada": 2026, "data": "2026-06-13", "hora": "11:00", "local": "Estação Cidadania", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 6, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 16, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j037", "time": "Projeto Vila Futsal", "adv": "R10", "comp": "Copa Arena do Pai - Fut7", "temporada": 2026, "data": "2026-06-14", "hora": "08:30", "local": "Arena do Pai", "mod": "Fut7", "cat": "Sub-10", "gp": 4, "gc": 3, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 14, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j038", "time": "Spor Club Resenha", "adv": "Caixa", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-07-18", "hora": "16:30", "local": "Liceu do Ceará", "mod": "Futsal", "cat": "Sub-11", "gp": 4, "gc": 1, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 8, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j039", "time": "Projeto Vila Futsal", "adv": "F5", "comp": "Taça Libertadores 2ª", "temporada": 2026, "data": "2026-07-25", "hora": "09:45", "local": "Col.Nilson Holanda", "mod": "Futsal", "cat": "Sub-10", "gp": 5, "gc": 1, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "Semi - Final", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j040", "time": "Projeto Vila Futsal", "adv": "CRB Pajuçara", "comp": "Copa R7 Kids - Fut 7", "temporada": 2026, "data": "2026-07-25", "hora": "11:30", "local": "Arena R7", "mod": "Fut7", "cat": "Sub-10", "gp": 5, "gc": 1, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 14, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j041", "time": "Projeto Vila Futsal", "adv": "Arcanus", "comp": "Copa XV Novembro", "temporada": 2026, "data": "2026-07-31", "hora": "18:30", "local": "Quadra do Timbó", "mod": "Futsal", "cat": "Sub-11", "gp": 10, "gc": 1, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j042", "time": "Projeto Vila Futsal", "adv": "Fla Lc", "comp": "Lecef - Fut 7", "temporada": 2026, "data": "2026-08-01", "hora": "19:00", "local": "Alvo Mondubim", "mod": "Fut7", "cat": "Sub-10", "gp": 1, "gc": 4, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "Final", "fotos": "", "link": "", "insc": 0.0, "arb": 25.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j043", "time": "Spor Club Resenha", "adv": "Escola Cidadã", "comp": "Copa M10", "temporada": 2026, "data": "2026-08-05", "hora": "19:00", "local": "Ginasio Zacarias Goncalves", "mod": "Futsal", "cat": "Sub-11", "gp": 3, "gc": 3, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "Quartas De Final", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j044", "time": "Projeto Vila Futsal", "adv": "Bicolor", "comp": "Copa R7 Kids - Fut 7", "temporada": 2026, "data": "2026-08-08", "hora": "11:00", "local": "Arena R7", "mod": "Fut7", "cat": "Sub-10", "gp": 2, "gc": 3, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j045", "time": "Spor Club Resenha", "adv": "Cmf", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-08-15", "hora": "08:45", "local": "Ginásio CMF", "mod": "Futsal", "cat": "Sub-11", "gp": 3, "gc": 3, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j046", "time": "Ferroviário Atlético Clube", "adv": "Inter Soccer", "comp": "FUT 7 Liga Ceará Academy", "temporada": 2026, "data": "2026-08-15", "hora": "16:30", "local": "Society Lagoa", "mod": "Fut7", "cat": "Sub-10", "gp": 1, "gc": 1, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias", "status": "concluido"}, {"id": "j047", "time": "Ferroviário Atlético Clube", "adv": "Jeito Moleque", "comp": "LIFF - 2º sem", "temporada": 2026, "data": "2026-08-22", "hora": "08:00", "local": "Ginásio Tirol", "mod": "Futsal", "cat": "Sub-10", "gp": 4, "gc": 0, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 8, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 16.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j048", "time": "Projeto Vila Futsal", "adv": "Asef", "comp": "Lecef - 2º sem", "temporada": 2026, "data": "2026-08-22", "hora": "09:30", "local": "Alvo Mondubim", "mod": "Fut7", "cat": "Sub-11", "gp": 3, "gc": 5, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j049", "time": "Projeto Vila Futsal", "adv": "Jerusalém", "comp": "Copa Euro - Academy", "temporada": 2026, "data": "2026-08-23", "hora": "08:30", "local": "Eco Point", "mod": "Fut7", "cat": "Sub-10", "gp": 1, "gc": 1, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j050", "time": "Ferroviário Atlético Clube", "adv": "Inter Soccer", "comp": "Cearense FUT7 - Academy", "temporada": 2026, "data": "2026-08-29", "hora": "08:30", "local": "Complexo IBR", "mod": "Fut7", "cat": "Sub-10", "gp": 3, "gc": 2, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j051", "time": "Projeto Vila Futsal", "adv": "Jerusalém", "comp": "Copa Arena do Pai - Fut7", "temporada": 2026, "data": "2026-08-30", "hora": "08:30", "local": "Arena do Pai", "mod": "Fut7", "cat": "Sub-10", "gp": 8, "gc": 1, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j052", "time": "Spor Club Resenha", "adv": "Paixão Fc", "comp": "AMISTOSO", "temporada": 2026, "data": "2026-09-07", "hora": "", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 1, "gc": 1, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 18, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 0.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias", "status": "concluido"}, {"id": "j053", "time": "Spor Club Resenha", "adv": "Juventude", "comp": "Licef - Futsal 1ºSem", "temporada": 2026, "data": "2026-09-05", "hora": "14:00", "local": "Liceu do Ceará", "mod": "Futsal", "cat": "Sub-11", "gp": 5, "gc": 4, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j054", "time": "Ferroviário Atlético Clube", "adv": "Flamengo", "comp": "LIFF - 2º sem", "temporada": 2026, "data": "2026-09-07", "hora": "12:00", "local": "Ginásio Tirol", "mod": "Futsal", "cat": "Sub-10", "gp": 4, "gc": 2, "gols": 0, "ast": 1, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 16.0, "comb": 0, "est": 0, "alim": 0, "obs": "Assistencias - 1pra Gol", "status": "concluido"}, {"id": "j055", "time": "Projeto Vila Futsal", "adv": "Du10", "comp": "Copa XV Novembro", "temporada": 2026, "data": "2026-09-10", "hora": "18:30", "local": "Quadra do Timbó", "mod": "Futsal", "cat": "Sub-11", "gp": 0, "gc": 1, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 16, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j056", "time": "Spor Club Resenha", "adv": "Arena JR", "comp": "AMISTOSO", "temporada": 2026, "data": "2026-09-11", "hora": "19:30", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-11", "gp": 10, "gc": 0, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 10.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j057", "time": "Projeto Vila Futsal", "adv": "Escola Cidadã", "comp": "R7 CUP 2ºsem", "temporada": 2026, "data": "2026-09-12", "hora": "10:00", "local": "Arena R7", "mod": "Fut7", "cat": "Sub-11", "gp": 2, "gc": 3, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 8, "destaque": false, "fase": "Quartas De Final", "fotos": "", "link": "", "insc": 20.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j058", "time": "Ferroviário Atlético Clube", "adv": "Juventus Eusébio", "comp": "FUT 7 Liga Ceará Academy", "temporada": 2026, "data": "2026-09-12", "hora": "17:30", "local": "Arena FUT7", "mod": "Fut7", "cat": "Sub-10", "gp": 0, "gc": 3, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 12, "destaque": false, "fase": "", "fotos": "", "link": "isaque", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j059", "time": "Projeto Vila Futsal", "adv": "Nova Era", "comp": "Copa Euro - Academy", "temporada": 2026, "data": "2026-09-13", "hora": "07:30", "local": "Arena Mesa Farta", "mod": "Fut7", "cat": "Sub-10", "gp": 4, "gc": 3, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 20, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j060", "time": "Ferroviário Atlético Clube", "adv": "Marinho", "comp": "Taça Fortaleza", "temporada": 2026, "data": "2026-09-19", "hora": "09:00", "local": "Praça João XXIII", "mod": "Futsal", "cat": "Sub-10", "gp": 1, "gc": 5, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 16, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 20.0, "arb": 17.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j061", "time": "Projeto Vila Futsal", "adv": "Ng", "comp": "Taça Libertadores 2ª", "temporada": 2026, "data": "2026-09-19", "hora": "13:00", "local": "Col.Nilson Holanda", "mod": "Futsal", "cat": "Sub-10", "gp": 2, "gc": 7, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 14, "destaque": false, "fase": "Final", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j062", "time": "Ferroviário Atlético Clube", "adv": "Juventus del rey", "comp": "Cearense FUT7 - Academy", "temporada": 2026, "data": "2026-09-26", "hora": "08:30", "local": "Complexo IBR", "mod": "Fut7", "cat": "Sub-10", "gp": 4, "gc": 0, "gols": 3, "ast": 0, "def_": 0, "defd": 0, "min": 22, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 20.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j063", "time": "Ferroviário Atlético Clube", "adv": "R10", "comp": "Kings Futsal - 2º sem", "temporada": 2026, "data": "2026-09-27", "hora": "08:30", "local": "Ginásio Piamarta", "mod": "Futsal", "cat": "Sub-10", "gp": 4, "gc": 0, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 17.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j064", "time": "Ferroviário Atlético Clube", "adv": "F5", "comp": "Taça Libertadores 2ª", "temporada": 2026, "data": "2026-09-27", "hora": "14:30", "local": "Escola Paulino rocha", "mod": "Futsal", "cat": "Sub-10", "gp": 5, "gc": 4, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 17.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j065", "time": "Spor Club Resenha", "adv": "Bicolor", "comp": "AMISTOSO", "temporada": 2026, "data": "2026-10-02", "hora": "19:00", "local": "Ginásio Novo Maracanaú", "mod": "Futsal", "cat": "Sub-10", "gp": 4, "gc": 1, "gols": 2, "ast": 0, "def_": 0, "defd": 0, "min": 10, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 0.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j066", "time": "Ferroviário Atlético Clube", "adv": "S7", "comp": "Copinha do Brasil", "temporada": 2026, "data": "2026-10-03", "hora": "18:00", "local": "Arena Luis Arthur", "mod": "Fut7", "cat": "Sub-10", "gp": 2, "gc": 4, "gols": 1, "ast": 0, "def_": 0, "defd": 0, "min": 14, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 15.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "concluido"}, {"id": "j069", "time": "Projeto Vila Futsal", "adv": "Primeiro Toque", "comp": "Liga Ceará Social", "temporada": 2026, "data": "2026-10-11", "hora": "12:10", "local": "Colégio da PM", "mod": "Futsal", "cat": "Sub-11", "gp": null, "gc": null, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 0, "destaque": false, "fase": "Quarta De Fnal", "fotos": "", "link": "", "insc": 0.0, "arb": 0.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "agendado"}, {"id": "j073", "time": "Ferroviário Atlético Clube", "adv": "Futcenter", "comp": "FUT 7 Liga Ceará Academy", "temporada": 2026, "data": "2026-10-09", "hora": "20:00", "local": "Arena Translali", "mod": "", "cat": "Sub-10", "gp": null, "gc": null, "gols": 0, "ast": 0, "def_": 0, "defd": 0, "min": 0, "destaque": false, "fase": "", "fotos": "", "link": "", "insc": 0.0, "arb": 0.0, "comb": 0, "est": 0, "alim": 0, "obs": "", "status": "agendado"}], "mensalidades": [{"id": "m004", "mes": "2026-03", "time": "Spor Club Resenha", "valor": 60.0}, {"id": "m010", "mes": "2026-04", "time": "Spor Club Resenha", "valor": 60.0}, {"id": "m020", "mes": "2026-05", "time": "Spor Club Resenha", "valor": 60.0}, {"id": "m027", "mes": "2026-06", "time": "Spor Club Resenha", "valor": 60.0}, {"id": "m029", "mes": "2026-06", "time": "Spor Club Resenha", "valor": 60.0}, {"id": "m035", "mes": "2026-07", "time": "Spor Club Resenha", "valor": 60.0}, {"id": "m043", "mes": "2026-08", "time": "Spor Club Resenha", "valor": 70.0}, {"id": "m046", "mes": "2026-08", "time": "Ferroviário Atlético Clube", "valor": 90.0}, {"id": "m053", "mes": "2026-09", "time": "Spor Club Resenha", "valor": 70.0}, {"id": "m054", "mes": "2026-09", "time": "Ferroviário Atlético Clube", "valor": 90.0}], "listas": {"times": ["Ferroviário Atlético Clube", "Projeto Vila Futsal", "Spor Club Resenha"], "competicoes": ["AMISTOSO", "Campeonato Cearense de Futsal 2026 – Divisão Especial", "Campeonatos FF7CE 2026", "Cearense FUT7 - Academy", "Competições LICEF 2026", "Copa Arena do Pai - Fut7", "Copa Ceará de Futsal Feminino 2026", "Copa Euro - Academy", "Copa Euro 2026", "Copa Euro Academy 2026", "Copa M10", "Copa R7 Kids - Fut 7", "Copa XV Novembro", "Copinha do Brasil", "Estadual LIFF de Futsal 2026", "Estadual Liga Ceará de Fut7 2026", "Estadual Liga Ceará de Fut7 Academy 2026", "Estadual Liga Ceará de Futsal 2026", "FUT 7 Liga Ceará Academy", "King Cups 2026", "Kings Futsal - 2º sem", "Kings Legue - Futsal 1º", "LIFF - 2º sem", "LIFF Estadual - Futsal", "LIGA MS 10 - Taça Libertadores 2026", "Lecef - 2º sem", "Lecef - Fut 7", "Licef - Futsal 1ºSem", "Liga Ceará Social", "Liga Ceará Social de Futsal 2026", "Liga Ceará de Futebol 2026", "Liga Elite Ceará 2026", "Liga Mucunã - Futsal", "Liga Mucunã de Futsal 2026", "Liga RF - Futsal", "Maracanuense - Futsal", "R7 CUP 2ºsem", "Taça Fortaleza", "Taça Libertadores 2ª", "Taça Liga Ceará de Fut7 2026", "Taça Ouro Liga Ceará 2026", "X Copa Estado do Ceará de Futsal 2026"], "locais": ["Alvo Aldeota", "Alvo Mondubim", "Arena FUT7", "Arena Luis Arthur", "Arena Mesa Farta", "Arena Mucunã", "Arena R7", "Arena Translali", "Arena do Pai", "CEJA Padre João da Rocha", "Col.Nilson Holanda", "Colégio Piamarta Montese", "Colégio da PM", "Complexo IBR", "EMEF Nilson Holanda", "Eco Point", "Escola Paulino rocha", "Estação Cidadania", "Ginasio Zacarias Goncalves", "Ginásio Aécio de Borba", "Ginásio CMF", "Ginásio Cazuzão - Caucaia", "Ginásio Coronel Idalécio Nogueira Diógenes", "Ginásio Cuca - José Walter", "Ginásio Domingos Oliveira", "Ginásio IFCE - Maracanaú", "Ginásio José Artur Costa", "Ginásio Júlio Irineu Costa", "Ginásio Mucunã", "Ginásio Novo Maracanaú", "Ginásio Parangaba", "Ginásio Piamarta", "Ginásio Poliesportivo da Parangaba", "Ginásio Poliesportivo do Liceu do Ceará", "Ginásio Quintino Chaves", "Ginásio SESC Caucaia", "Ginásio Senador Carlos Jereissati", "Ginásio Tarcísio Bonfim", "Ginásio Tirol", "Ginásio Valdemar Alcântara", "Ginásio da Escola Agrícola", "Ginásio de Apuiarés", "Ginásio do CEU/UFC", "Ginásio do Colégio Flávio Marcílio", "Instituto Lucimário - Acaracuzinho", "Liceu do Ceará", "Praça João XXIII", "Praça Juventude - Acaracuzinho", "Quadra do Timbó", "Quadra do bairro Mucunã", "Society Lagoa", "Tirol"], "equipes": ["A7", "AAA Selvagem", "AABB-Darwin", "ABC", "ABC Industrial", "ACF7 - Crateús", "AL Barbearia FC", "ASSOCIACAO PROJACT", "Aabb", "Alambique", "Americano", "Amigos FC", "Anjos de Céu-Uniateneu Fut7", "Apuiarés", "Aracati", "Aracati Fut7", "Arcanus", "Arena JR", "Argentina de Cristo", "Asef", "Asev", "Associação Atlética Padre Mororó", "Associação Desportiva Primeiro Passo - Quixeramobim", "Associação Esportiva Aquiraz", "Associação Esportiva RB Eusébio", "Aston Villa FC", "Atletas de Cristo FC", "Atlético Apuiarés", "Atlético Praia", "Atlético Recreio", "Atlético Sul", "Atlético São Francisco", "Atlético T.", "Aviva Futsal", "Açaí Vitalli FC", "BES", "BSC Fut 7", "Bad Boys", "Baile Fut 7", "Baladeiruz FC", "Banabuiú", "Barcelona Parangaba", "Barreira Fut 7", "Barreira Futsal", "Barçaky", "Benfica FC", "Bicolor", "Bl4", "Bocas Old Boys", "Bola Cheia", "Bombeiros Futebol Clube", "Bosque FC", "Brasil FC", "Brother Tips FC", "Brothers F.C. Fumaça Fut7", "CCM F.C.", "CFA", "CFS Milan", "CRB Pajuçara", "CaetanoSô Estourados", "Caipirinha", "Cairat", "Caixa", "Cajuais FC - Icapuí", "Calouros do Ar Futebol Clube", "Cangayceiros Futebol Clube", "Cangaçeiros", "Canindé Futsal", "Cascavel", "Catedral/MDR", "Ceará SC", "Celtic MB Fut7", "Children of God", "Clube Atlético Caxitoré", "Clube Atlético Rio Negro", "Cmf", "Comunidade das Nações", "Crateús", "DRAGON FORCE FORTALEZA", "Dendê Sporting Club", "Descubra SC", "Desportivo 7", "Dodgers FC", "Dom Divino FC", "Dragões da Bola FC", "Du10", "Ducks FC", "ESCOLA ANDREZINHO", "ESPORTE CLUBE NORDESTE", "Egito", "Erriesse FC", "Escola Cidadã", "Esquina Sport", "Estrela Azul", "Estrela-Ita Diversidade de Itapipoca", "Euro Fut7", "F5", "FC Bayern Caucaia", "Falcões", "Falcões/JUV", "Ferroviário", "Fiorentina Futebol Clube", "Fla Lc", "Fla Vp", "Flamboyant SC", "Flamengo", "Flamigos", "Foras de Forma", "Fortaleza EC", "Fortaleza United FS", "Fortalezinha", "Fortim Fut7", "Força", "Fox Team Futebol Clube", "Frieza Esporte Clube", "Fulminante FC", "FutVillage Esporte Club", "Futcenter", "Fúria", "G4 Turismo F.C.", "GREMIO FUTCENTER", "Galetos F.C.", "Genova FC", "Gladiadores FC", "GrandinoFut7", "Grandinorl Fut7", "Grêmio Recreativo Jardim Gold", "Grêmio Recreativo Pague Menos", "Guarany Sporting Club - GSC Fut7", "Guará Fut7", "HOLANDA", "HOLANDA EUSÉBIO SPORTING CLUB", "HOOLIGANS", "HORIZONTE SOCIETY CLUBE", "Haja Mel-Budweiser", "Heineken Futebol Society", "Hercules Futebol Club", "IDEAL FC", "INFANTE ATLETICO CLUBE", "INSTEL ROMA", "Ibis", "Inter Soccer", "InterSoccer", "Ipu Futsal", "JOTA GENERATION FC", "JUVENTUS", "Jaguaretama Futsal", "Jaguaribe", "Jeito Moleque", "Jerusalem", "Jerusalém", "Juventude", "Juventus", "Juventus Eusébio", "Juventus del rey", "KIEV ESPORTE CLUBE", "LARANJA MECÂNICA", "LAZIO FUT7 AQUIRAZ", "LEICESTER FUT7", "LIONS E.C", "LIVERPOOL JR", "LIVERPOOL.F.C", "LUSOS FUT7", "Lmd", "M5", "M5 Sport", "MALA FALSA FUTEBOL SOCIETY", "MALFEITOS F.C", "MANCHESTER", "MANCHESTER WS", "MANGABEIRA ESPORTE CLUBE", "MARIAS FC", "MERAKI", "METRÓPOLE ESPORTE CLUBE", "MIL GRAU FUTEBOL CLUBE", "MILAN FUTEBOL CLUBE", "MILITASTEAM", "MURALHA FUT7", "Maracanaú", "Maranguape", "Marinho", "Meninos Vila", "Meninos da Vila", "MÁLAGA FC", "Ng", "Nova Era", "ORTOBOM", "OS AZILADOS", "PACATUBA F.C", "PACOTI FUT7", "PALMEIRINHAS", "PANDAS F.S", "PANDAS FUTEBOL SOCIETY", "PANELINHA", "PAPUDINS FUTEBOL CLUBE", "PARIS FC", "PEAKY BLINDENS FC.", "PELADA F.C.", "PELADEIROS DE QUINTA", "PFC RETRÔ", "PJQ FUT7", "POLÊMICOS SPORTING CLUB", "PORTUGUESA FUT7 SÃO GONÇALO", "POTIRETAMA FUT 7", "PREGUIÇA F.C UMIRIM", "PSG ACADEMY", "PSNFUT7", "PUMAS F.C", "Paixão Fc", "Paraipaba", "Parma", "Pfc", "Pindoretama Talentos", "Primeiro Toque", "Projeto Gileade", "Projeto Vila Futsal", "Pvf", "Quixeramobim Futsal", "R10", "R7 Futsal", "RACCE FC", "RB CITY PENAFORTE FUT7", "RDA", "RDM FUT7", "REAL CHIEVO SF", "REAL PORTO FUT7", "RED BULL MLT FUT7", "REDONDA FC", "RESENHA FC", "ROMA WOLFS FUT7", "ROMA-CE FUT7", "Recanto Verde", "Redenção", "Resenha S.C.", "Russas Futsal", "S.C EUSÉBIO", "S7", "SALINAS", "SANGUE NOVO", "SANTO ANTÔNIO EUSEBIO", "SANTOS MARANGUAPE", "SC Social", "SPORT CLUB REAL", "SUBIDA F.C", "SUPER ONZE F.C", "Semear", "Sport Jovem", "SÃO BENEDITO", "SÃO GONÇALO ESPORTE CLUBE", "São Gonçalo do Amarante", "São João do Jaguaribe", "TANQUES FUT7", "THE QUIOSQUE LEAGUE", "TOP SPORT FC", "TRIVELA GUARÁ", "Tigres", "Tigres da Vila", "UCDC F7", "UFC", "UNIVERSIDADE FEDERAL DO CEARÁ - UFC", "URUBURETAMA VIRA COPOS. F.C", "URUGUAI FUT 7", "UZ ABENÇOADOS FC", "UZ BARÃO", "UZ BROTHERS DA MERCHAN", "UZ BUDWEISER FUT7", "UZ FINADOS", "UZ RESENHAS F.C.", "Unifor", "VF7-LINEAGE II BULL", "VIA URBANA FUTEBOL CLUBE", "VILA BRASIL FC", "VILA DA PRATA FC", "VITRINE ARTE EC", "Veteran's", "XM FC", "YEPO UNITED CLUB", "ZENIT"], "categorias": ["Principal", "Feminino", "Sub-20", "Sub-19", "Sub-18", "Sub-17", "Sub-16", "Sub-15", "Sub-14", "Sub-13", "Sub-12", "Sub-11", "Sub-10", "Sub-9", "Sub-8", "Sub-7", "Veterano 35", "Master 40", "Sênior 50"]}};
+const KEY='diario-esportivo-v1';
+const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MESES_L=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const POSICOES=['Goleiro','Fixo','Ala','Pivô','Zagueiro','Lateral','Volante','Meia','Atacante'];
+const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const FASES=['','Fase de grupos','Oitavas de final','Quartas de final','Semifinal','Final'];
+const COLOC=['Campeão','Vice','Semifinal','Quartas de final','Participação'];
+const PREMIOS=['Artilheiro','Melhor jogador','Melhor goleiro','Fair play','Revelação'];
+const ANO=new Date().getFullYear();
+
+function inicial(){
+  return {
+    perfil:{nome:'Caio',numero:'21',posicao:'Pivô',ano:2017,resp:[{nome:'',tel:''},{nome:'',tel:''}],foto:''},
+    jogos:SEED.jogos, mensalidades:SEED.mensalidades, uniformes:[], logistica:[],
+    conquistas:[], individuais:[], fotosEspeciais:[],
+    treinos:{dias:['Ter','Qui'],horas:1}, orcamento:10000, listas:SEED.listas,
+    filtro:{time:'',temporada:String(ANO),mes:''}
+  };
+}
+let S;
+try{ S=JSON.parse(localStorage.getItem(KEY))||inicial(); }catch(e){ S=inicial(); }
+function salvar(sync=true){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){aviso('Não foi possível salvar neste aparelho');} if(sync) marcarAlteracao(); }
+
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=v=>'R$ '+(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const uid=()=>Math.random().toString(36).slice(2,9);
+const resultado=j=>j.gp==null||j.gc==null||j.status==='agendado'?'':j.gp>j.gc?'V':j.gp<j.gc?'D':'E';
+const RES_N={V:'Vitória',E:'Empate',D:'Derrota'};
+const catAtual=()=>'Sub-'+(ANO-(+S.perfil.ano)+1);
+const goleiro=()=>S.perfil.posicao==='Goleiro';
+const custoJogo=j=>(+j.insc||0)+(+j.arb||0)+(+j.comb||0)+(+j.est||0)+(+j.alim||0);
+function aviso(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(aviso.t);aviso.t=setTimeout(()=>e.classList.remove('on'),2000);}
+function fData(d){if(!d)return'';const[a,m,dd]=d.split('-');return `${dd}/${m}`;}
+
+/* filtros */
+function passa(item,campoData='data'){
+  const f=S.filtro, d=item[campoData]||item.mes||'';
+  if(f.time&&item.time&&item.time!==f.time) return false;
+  if(f.temporada&&d.slice(0,4)!==f.temporada) return false;
+  if(f.mes&&d.slice(5,7)!==f.mes) return false;
+  return true;
+}
+function barraFiltros(){
+  const anos=[...new Set(S.jogos.map(j=>(j.data||'').slice(0,4)).filter(Boolean).concat(String(ANO)))].sort().reverse();
+  return `<div class="filtros" role="group" aria-label="Filtros">
+   <select aria-label="Time" onchange="S.filtro.time=this.value;salvar(false);render()"><option value="">Todos os times</option>${S.listas.times.map(t=>`<option ${S.filtro.time===t?'selected':''}>${esc(t)}</option>`).join('')}</select>
+   <select aria-label="Temporada" onchange="S.filtro.temporada=this.value;salvar(false);render()"><option value="">Todas as temporadas</option>${anos.map(a=>`<option ${S.filtro.temporada===a?'selected':''}>${a}</option>`).join('')}</select>
+   <select aria-label="Mês" onchange="S.filtro.mes=this.value;salvar(false);render()"><option value="">Ano inteiro</option>${MESES_L.map((m,i)=>{const v=String(i+1).padStart(2,'0');return `<option value="${v}" ${S.filtro.mes===v?'selected':''}>${m}</option>`}).join('')}</select>
+  </div>`;
+}
+
+/* telas */
+let vista='inicio', busca='', tiposCusto=null;
+function render(){
+  document.querySelectorAll('nav [data-v]').forEach(b=>b.dataset.v===vista?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+  const nav=document.querySelector('nav');
+  if(!CFG.modo){ nav.hidden=true; $('#app').innerHTML=telaLogin(); setStatus(); return; }
+  nav.hidden=false;
+  $('#app').innerHTML=({inicio,jogos:telaJogos,custos,perfil})[vista]();
+  setStatus();
+  window.scrollTo(0,0);
+}
+
+function figurinha(js){
+  const p=S.perfil, conc=js.filter(j=>j.status!=='agendado');
+  const ini=(p.nome||'?').trim().slice(0,1).toUpperCase();
+  return `<div class="figurinha">
+    <div class="camisa" aria-hidden="true">${esc(p.numero)}</div>
+    <div class="fig-topo">
+      <div class="foto">${p.foto?`<img src="${p.foto}" alt="Foto de ${esc(p.nome)}">`:ini}</div>
+      <div><div class="fig-nome">${esc(p.nome)}</div>
+      <div class="fig-info">${esc(p.posicao)}, ${catAtual()}<br>${S.filtro.time?esc(S.filtro.time):S.listas.times.length+' times'}</div>
+      <div class="media-nota"><b>${fNota(mediaNotas(conc))}</b><span>nota média</span></div></div>
+    </div>
+    <div class="fig-rodape">
+      <div><b>${conc.length}</b><span>jogos</span></div>
+      <div><b>${conc.reduce((s,j)=>s+(+j.gols||0),0)}</b><span>gols</span></div>
+      <div><b>${conc.reduce((s,j)=>s+(+j.ast||0),0)}</b><span>assist.</span></div>
+      <div><b>${conc.filter(j=>j.destaque).length}</b><span>destaques</span></div>
+    </div></div>`;
+}
+
+/* nota por jogo */
+function calcNota(j){
+  if(j.status==='agendado'||!resultado(j)) return null;
+  const it=[['Base',6]];
+  if(+j.gols) it.push([`${j.gols} gol${j.gols>1?'s':''}`, j.gols*1]);
+  if(+j.ast) it.push([`${j.ast} assistência${j.ast>1?'s':''}`, j.ast*0.7]);
+  if(j.destaque) it.push(['Destaque do jogo',1]);
+  const r=resultado(j); if(r==='V') it.push(['Vitória',0.5]); if(r==='D') it.push(['Derrota',-0.5]);
+  if((+j.min||0)>=15) it.push(['15 minutos ou mais em quadra',0.3]);
+  if(goleiro()){
+    if(+j.def_) it.push([`${j.def_} defesa${j.def_>1?'s':''}`, j.def_*0.3]);
+    if(+j.defd) it.push([`${j.defd} defesa${j.defd>1?'s':''} difícil${j.defd>1?'s':''}`.replace('difícils','difíceis'), j.defd*0.6]);
+    if(+j.gc===0) it.push(['Sem sofrer gols',0.5]); else if(+j.gc>2) it.push([`${j.gc} gols sofridos`, -(j.gc-2)*0.3]);
+  }
+  const v=Math.max(4,Math.min(10,it.reduce((s,x)=>s+x[1],0)));
+  return {v:Math.round(v*10)/10,it};
+}
+const fNota=v=>v==null?'-':v.toFixed(1).replace('.',',');
+const clsNota=v=>v>=8?'alta':v>=6?'media':'baixa';
+function mediaNotas(js){ const n=js.map(calcNota).filter(Boolean).map(x=>x.v); return n.length?n.reduce((a,b)=>a+b,0)/n.length:null; }
+
+/* temas de cor */
+const TEMAS={
+  verde:{nome:'Verde',campo:'#0E6B3A',campo2:'#0A5530',ouro:'#F2C230'},
+  azul:{nome:'Azul',campo:'#1D4F91',campo2:'#163D70',ouro:'#F2C230'},
+  vermelho:{nome:'Vermelho',campo:'#B3261E',campo2:'#8C1D17',ouro:'#FFFFFF'},
+  preto:{nome:'Preto',campo:'#23272E',campo2:'#15181D',ouro:'#F2C230'},
+  roxo:{nome:'Roxo',campo:'#5B2A86',campo2:'#46206A',ouro:'#7CE0C3'},
+  laranja:{nome:'Laranja',campo:'#C4570F',campo2:'#9E450B',ouro:'#FFE08A'},
+  tricolor:{nome:'Azul e vermelho',campo:'#1D3E8C',campo2:'#C8102E',ouro:'#FFFFFF'},
+  rubronegro:{nome:'Vermelho e preto',campo:'#C8102E',campo2:'#1A1A1A',ouro:'#FFFFFF'},
+  alvinegro:{nome:'Preto e branco',campo:'#1A1A1A',campo2:'#3A3A3A',ouro:'#FFFFFF'}
+};
+function aplicarTema(){
+  const c=(typeof CFG!=='undefined'&&CFG.tema)||'verde', t=TEMAS[c]||TEMAS.verde, r=document.documentElement;
+  r.style.setProperty('--campo',t.campo); r.style.setProperty('--campo-2',t.campo2); r.style.setProperty('--ouro',t.ouro);
+  const m=(typeof CFG!=='undefined'&&CFG.modoCor)||''; m?r.setAttribute('data-theme',m):r.removeAttribute('data-theme');
+  const meta=document.querySelector('meta[name=theme-color]'); if(meta) meta.content=t.campo;
+}
+function escolherTema(k){ CFG.tema=k; salvarCfg(); aplicarTema(); render(); setTimeout(()=>document.getElementById('aparencia')?.scrollIntoView(),30); }
+function escolherModo(m){ CFG.modoCor=m; salvarCfg(); aplicarTema(); render(); setTimeout(()=>document.getElementById('aparencia')?.scrollIntoView(),30); }
+function blocoAparencia(){
+  const atual=CFG.tema||'verde', modo=CFG.modoCor||'';
+  return `<h2 id="aparencia">Cores do app</h2>
+  <div class="cores">${Object.entries(TEMAS).map(([k,t])=>`<button class="cor" aria-pressed="${k===atual}" onclick="escolherTema('${k}')"><i><s style="background:${t.campo}"></s><s style="background:${t.campo2}"></s><u style="background:${t.ouro};box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)"></u></i>${t.nome}</button>`).join('')}</div>
+  <div class="chips" style="margin-top:12px">${[['','Automático'],['light','Claro'],['dark','Escuro']].map(([v,n])=>`<button aria-pressed="${v===modo}" onclick="escolherModo('${v}')">${n}</button>`).join('')}</div>`;
+}
+
+function inicio(){
+  const js=S.jogos.filter(j=>passa(j));
+  const conc=js.filter(j=>j.status!=='agendado').sort((a,b)=>a.data.localeCompare(b.data));
+  const r={V:0,E:0,D:0}; conc.forEach(j=>{const x=resultado(j);if(x)r[x]++;});
+  const minutos=conc.reduce((s,j)=>s+(+j.min||0),0);
+  const prox=S.jogos.filter(j=>j.status==='agendado'&&(!S.filtro.time||j.time===S.filtro.time)).sort((a,b)=>a.data.localeCompare(b.data));
+  const gm=Array(12).fill(0); conc.forEach(j=>gm[+j.data.slice(5,7)-1]+=+j.gols||0);
+  const mx=Math.max(1,...gm);
+  const gp=conc.reduce((s,j)=>s+(+j.gp||0),0), gc=conc.reduce((s,j)=>s+(+j.gc||0),0);
+  const notas=conc.map(calcNota).filter(Boolean).map(x=>x.v);
+  const nm=Array(12).fill(0).map((_,i)=>mediaNotas(conc.filter(j=>+j.data.slice(5,7)===i+1)));
+  return `
+  ${figurinha(js)}
+  ${barraFiltros()}
+  <h2>Resultados</h2>
+  <div class="placar-geral"><div class="V"><b>${r.V}</b><span>vitórias</span></div><div class="E"><b>${r.E}</b><span>empates</span></div><div class="D"><b>${r.D}</b><span>derrotas</span></div></div>
+  <div class="forma" aria-label="Últimos resultados">${conc.slice(-10).map(j=>{const x=resultado(j);return x?`<i class="${x}" title="${esc(j.adv)} ${j.gp}x${j.gc}">${x}</i>`:''}).join('')}</div>
+  <h2>Números do atleta</h2>
+  <div class="grade">
+    <div class="cx"><b>${minutos}</b><span>minutos jogados</span></div>
+    <div class="cx"><b>${conc.length?(minutos/conc.length).toFixed(0):0}</b><span>min por jogo</span></div>
+    <div class="cx"><b>${conc.length?(conc.reduce((s,j)=>s+(+j.gols||0),0)/conc.length).toFixed(2).replace('.',','):'0'}</b><span>gols por jogo</span></div>
+    <div class="cx"><b>${gp}</b><span>gols do time</span></div>
+    <div class="cx"><b>${gc}</b><span>gols sofridos</span></div>
+    <div class="cx"><b>${conc.length?Math.round(r.V/conc.length*100):0}%</b><span>aproveitamento</span></div>
+    <div class="cx"><b>${fNota(mediaNotas(conc))}</b><span>nota média</span></div>
+    <div class="cx"><b>${fNota(notas.length?Math.max(...notas):null)}</b><span>melhor nota</span></div>
+    <div class="cx"><b>${notas.filter(v=>v>=8).length}</b><span>jogos com nota 8+</span></div>
+    ${goleiro()?`<div class="cx"><b>${conc.reduce((s,j)=>s+(+j.def_||0),0)}</b><span>defesas</span></div><div class="cx"><b>${conc.reduce((s,j)=>s+(+j.defd||0),0)}</b><span>defesas difíceis</span></div>`:''}
+  </div>
+  <h2>Gols por mês</h2>
+  <div class="barras">${gm.map(v=>`<div><em>${v||''}</em><s style="height:${Math.round(v/mx*88)}px"></s></div>`).join('')}</div>
+  <div class="rot">${MESES.map(m=>`<span>${m}</span>`).join('')}</div>
+  <h2>Nota média por mês</h2>
+  <div class="barras">${nm.map(v=>`<div><em>${v==null?'':fNota(v)}</em><s style="height:${v==null?0:Math.round((v-3)/7*88)}px;background:${v==null?'transparent':`var(--${{alta:'vit',media:'emp',baixa:'der'}[clsNota(v)]})`}"></s></div>`).join('')}</div>
+  <div class="rot">${MESES.map(m=>`<span>${m}</span>`).join('')}</div>
+  <h2>Próximos jogos</h2>
+  ${prox.length?prox.map(cardJogo).join(''):`<div class="lst"><div class="vazio">Nenhum jogo agendado. Toque em + para registrar.</div></div>`}`;
+}
+
+function cardJogo(j){
+  const x=resultado(j);
+  const cor=x?`var(--${{V:'vit',E:'emp',D:'der'}[x]})`:'var(--linha)';
+  return `<button class="jogo" onclick="abrirJogo('${j.id}')">
+    <i style="background:${cor}"></i>
+    <div><div class="adv">${esc(j.adv||'Adversário')}</div>
+      <small>${fData(j.data)}${j.hora?' às '+esc(j.hora):''}, ${esc(j.comp)}</small>
+      <small>${esc(j.time)}</small>
+      <div style="margin-top:5px">${j.gols?`<span class="tag">${j.gols} gol${j.gols>1?'s':''}</span>`:''}${j.ast?`<span class="tag">${j.ast} assist.</span>`:''}${j.destaque?'<span class="tag ouro">Destaque</span>':''}${j.fase?`<span class="tag">${esc(j.fase)}</span>`:''}</div>
+    </div>
+    <div class="pl">${x?`${j.gp} x ${j.gc}<small>${RES_N[x]}</small>${(n=>n?`<span class="nota ${clsNota(n.v)}" title="Nota do jogo">${fNota(n.v)}</span>`:'')(calcNota(j))}`:`<small>Agendado</small>`}</div>
+  </button>`;
+}
+
+function telaJogos(){
+  const q=busca.toLowerCase();
+  const js=S.jogos.filter(j=>passa(j)).filter(j=>!q||(j.adv+' '+j.comp+' '+j.local).toLowerCase().includes(q)).sort((a,b)=>b.data.localeCompare(a.data));
+  let html=`<h2 style="margin-top:18px">Jogos</h2>${barraFiltros()}
+  <input class="busca" type="search" placeholder="Buscar adversário, competição ou local" value="${esc(busca)}" oninput="busca=this.value;clearTimeout(window._b);window._b=setTimeout(()=>{render();const i=document.querySelector('.busca');i.focus();i.setSelectionRange(i.value.length,i.value.length)},300)">`;
+  let mesAtual='';
+  if(!js.length) html+=`<div class="lst" style="margin-top:14px"><div class="vazio">Nenhum jogo com esses filtros.</div></div>`;
+  js.forEach(j=>{const m=j.data.slice(0,7);if(m!==mesAtual){mesAtual=m;html+=`<div class="mes">${MESES_L[+m.slice(5)-1]} ${m.slice(0,4)}</div>`;}html+=cardJogo(j);});
+  return html;
+}
+
+function custos(){
+  const js=S.jogos.filter(j=>passa(j));
+  const mens=S.mensalidades.filter(m=>passa(m,'mes'));
+  const unif=S.uniformes.filter(u=>passa(u));
+  const log=S.logistica.filter(l=>passa(l));
+  const tipos={
+    'Inscrição':js.reduce((s,j)=>s+(+j.insc||0),0),
+    'Arbitragem':js.reduce((s,j)=>s+(+j.arb||0),0),
+    'Mensalidade':mens.reduce((s,m)=>s+(+m.valor||0),0),
+    'Combustível':js.reduce((s,j)=>s+(+j.comb||0),0)+log.filter(l=>l.tipo==='Combustível').reduce((s,l)=>s+(+l.valor),0),
+    'Estacionamento':js.reduce((s,j)=>s+(+j.est||0),0)+log.filter(l=>l.tipo==='Estacionamento').reduce((s,l)=>s+(+l.valor),0),
+    'Alimentação':js.reduce((s,j)=>s+(+j.alim||0),0)+log.filter(l=>l.tipo==='Alimentação').reduce((s,l)=>s+(+l.valor),0),
+    'Uniformes':unif.reduce((s,u)=>s+(+u.valor||0),0)
+  };
+  if(!tiposCusto) tiposCusto=Object.keys(tipos);
+  const total=Object.entries(tipos).filter(([k])=>tiposCusto.includes(k)).reduce((s,[,v])=>s+v,0);
+  const mx=Math.max(1,...Object.values(tipos));
+  // orçamento: mês do filtro ou mês atual
+  const mesRef=(S.filtro.temporada||String(ANO))+'-'+(S.filtro.mes||String(new Date().getMonth()+1).padStart(2,'0'));
+  const noMes=d=>(d||'').startsWith(mesRef);
+  const gastoMes=S.jogos.filter(j=>noMes(j.data)&&(!S.filtro.time||j.time===S.filtro.time)).reduce((s,j)=>s+custoJogo(j),0)
+    +S.mensalidades.filter(m=>m.mes===mesRef&&(!S.filtro.time||m.time===S.filtro.time)).reduce((s,m)=>s+(+m.valor),0)
+    +S.uniformes.filter(u=>noMes(u.data)).reduce((s,u)=>s+(+u.valor),0)
+    +S.logistica.filter(l=>noMes(l.data)).reduce((s,l)=>s+(+l.valor),0);
+  const pct=Math.min(100,gastoMes/(+S.orcamento||1)*100);
+  const sobra=(+S.orcamento||0)-gastoMes;
+  const [ma,mm]=mesRef.split('-');
+  return `<h2 style="margin-top:18px">Custos</h2>${barraFiltros()}
+  <h2>Orçamento de ${MESES_L[+mm-1]}</h2>
+  <div class="orc">
+    <div class="big">${brl(gastoMes)}</div><div class="muted">gastos de ${brl(S.orcamento)} disponíveis</div>
+    <div class="medidor"><i style="width:${pct}%;background:${pct>=100?'var(--der)':pct>80?'var(--emp)':'var(--vit)'}"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:.9rem"><span>${sobra>=0?'Disponível':'Acima do orçamento'}</span><b>${brl(Math.abs(sobra))}</b></div>
+    <button class="lnk" onclick="editarOrcamento()">Alterar orçamento mensal</button>
+  </div>
+  <div class="linha-t"><h2>Por tipo</h2><b style="font:800 1.4rem var(--cond)">${brl(total)}</b></div>
+  <div class="chips">${Object.keys(tipos).map(k=>`<button aria-pressed="${tiposCusto.includes(k)}" onclick="alternaTipo('${k}')">${k}</button>`).join('')}</div>
+  ${Object.entries(tipos).filter(([k])=>tiposCusto.includes(k)).map(([k,v])=>`<div class="custo-bar"><div><span>${k}</span><b>${brl(v)}</b></div><s><i style="width:${v/mx*100}%"></i></s></div>`).join('')}
+  <div class="linha-t"><h2>Mensalidades</h2><button class="lnk" onclick="formMens()">Adicionar</button></div>
+  ${listaSimples(mens.sort((a,b)=>b.mes.localeCompare(a.mes)),m=>`<span><b>${MESES_L[+m.mes.slice(5)-1]} ${m.mes.slice(0,4)}</b><br><small class="muted">${esc(m.time)}</small></span><span>${brl(m.valor)}</span>`,'mensalidades','Nenhuma mensalidade no período.')}
+  <div class="linha-t"><h2>Custo logístico avulso</h2><button class="lnk" onclick="formLog()">Adicionar</button></div>
+  ${listaSimples(log,l=>`<span><b>${esc(l.tipo)}</b><br><small class="muted">${fData(l.data)} ${esc(l.desc||'')}</small></span><span>${brl(l.valor)}</span>`,'logistica','Custos de combustível, estacionamento e alimentação fora dos jogos.')}
+  <div class="linha-t"><h2>Uniformes</h2><button class="lnk" onclick="formUnif()">Adicionar</button></div>
+  ${listaSimples(unif,u=>`<span><b>${esc(u.tipo)}</b><br><small class="muted">${fData(u.data)} ${esc(u.time||'')}</small></span><span>${brl(u.valor)}</span>`,'uniformes','Nenhum uniforme registrado.')}`;
+}
+function listaSimples(arr,fn,col,vazio){
+  if(!arr.length) return `<div class="lst"><div class="vazio">${vazio}</div></div>`;
+  return `<div class="lst">${arr.map(x=>`<div>${fn(x)}<button aria-label="Remover" onclick="remover('${col}','${x.id}')">✕</button></div>`).join('')}</div>`;
+}
+function remover(col,id){ if(!confirm('Remover este registro?'))return; S[col]=S[col].filter(x=>x.id!==id); salvar(); render(); aviso('Registro removido'); }
+function alternaTipo(k){ tiposCusto=tiposCusto.includes(k)?tiposCusto.filter(x=>x!==k):[...tiposCusto,k]; render(); }
+
+function perfil(){
+  const p=S.perfil;
+  const anos=[];for(let a=ANO-4;a>=ANO-20;a--)anos.push(a);
+  return `<h2 style="margin-top:18px">Atleta</h2>
+  <div class="cx" style="padding:14px">
+   <div style="display:flex;gap:14px;align-items:center;margin-bottom:12px">
+    <div class="foto" style="background:var(--campo);color:#fff">${p.foto?`<img src="${p.foto}" alt="">`:esc((p.nome||'?')[0])}</div>
+    <label style="flex:1;margin:0">Foto<input type="file" accept="image/*" onchange="carregarFoto(this)"></label>
+   </div>
+   <label>Nome<input value="${esc(p.nome)}" onchange="S.perfil.nome=this.value;salvar()"></label>
+   <div class="dupla">
+    <label>Número da camisa<input inputmode="numeric" value="${esc(p.numero)}" onchange="S.perfil.numero=this.value.replace('#','');salvar()"></label>
+    <label>Posição<select onchange="S.perfil.posicao=this.value;salvar()">${POSICOES.map(x=>`<option ${x===p.posicao?'selected':''}>${x}</option>`).join('')}</select></label>
+   </div>
+   <div class="dupla">
+    <label>Ano de nascimento<select onchange="S.perfil.ano=+this.value;salvar();render()">${anos.map(a=>`<option ${a==p.ano?'selected':''}>${a}</option>`).join('')}</select></label>
+    <label>Categoria em ${ANO}<input value="${catAtual()}" readonly></label>
+   </div>
+   ${[0,1].map(i=>`<div class="dupla"><label>Responsável ${i+1}<input value="${esc(p.resp[i].nome)}" onchange="S.perfil.resp[${i}].nome=this.value;salvar()"></label><label>Telefone<input inputmode="tel" value="${esc(p.resp[i].tel)}" onchange="S.perfil.resp[${i}].tel=this.value;salvar()"></label></div>`).join('')}
+  </div>
+
+  <h2>Treinos</h2>
+  <div class="cx" style="padding:14px">
+   <div class="muted" style="font-size:.85rem;margin-bottom:6px">Dias de treino</div>
+   <div class="dias">${DIAS.map(d=>`<label><input type="checkbox" ${S.treinos.dias.includes(d)?'checked':''} onchange="diaTreino('${d}',this.checked)"><span>${d}</span></label>`).join('')}</div>
+   <label style="margin-top:12px">Horas por treino<select onchange="S.treinos.horas=+this.value;salvar();render()">${[0.5,1,1.5,2,2.5,3].map(h=>`<option value="${h}" ${h==S.treinos.horas?'selected':''}>${String(h).replace('.',',')}h</option>`).join('')}</select></label>
+   <div class="muted">${S.treinos.dias.length*S.treinos.horas} horas de treino por semana</div>
+  </div>
+
+  <div class="linha-t"><h2>Conquistas do time</h2><button class="lnk" onclick="formConq()">Adicionar</button></div>
+  ${S.conquistas.length?`<div class="lst">${S.conquistas.map(c=>`<div><span class="trofeu"><span class="pos">${esc(c.posicao.split(' ')[0])}</span><span><b>${esc(c.camp)}</b><br><small class="muted">${esc(c.time)}, ${esc(c.temporada)}</small></span></span><button aria-label="Remover" onclick="remover('conquistas','${c.id}')">✕</button></div>`).join('')}</div>`:`<div class="lst"><div class="vazio">Registre títulos e colocações finais.</div></div>`}
+
+  <div class="linha-t"><h2>Prêmios individuais</h2><button class="lnk" onclick="formInd()">Adicionar</button></div>
+  ${listaSimples(S.individuais,c=>`<span><b>${esc(c.premio)}</b><br><small class="muted">${esc(c.camp)}, ${esc(c.time)}</small></span>`,'individuais','Artilharia, melhor jogador, fair play.')}
+
+  <div class="linha-t"><h2>Fotos especiais</h2><button class="lnk" onclick="formFoto()">Adicionar link</button></div>
+  ${listaSimples(S.fotosEspeciais,f=>`<span><b>${esc(f.titulo)}</b><br><a href="${esc(f.url)}" target="_blank" rel="noopener" class="muted" style="font-size:.85rem">Abrir</a></span>`,'fotosEspeciais','Fotos e vídeos marcantes.')}
+
+  <h2>Listas</h2>
+  <div class="lst">${[['times','Meus times'],['competicoes','Competições'],['locais','Locais'],['equipes','Adversários']].map(([k,n])=>`<div><span><b>${n}</b><br><small class="muted">${S.listas[k].length} itens</small></span><button class="lnk" style="font-size:.9rem" onclick="formLista('${k}','${n}')">Adicionar</button></div>`).join('')}</div>
+
+  ${blocoAparencia()}
+  <h2 id="conta">Conta e dados</h2>
+  ${blocoConta()}`;
+}
+function diaTreino(d,on){ S.treinos.dias=on?[...new Set([...S.treinos.dias,d])]:S.treinos.dias.filter(x=>x!==d); S.treinos.dias.sort((a,b)=>DIAS.indexOf(a)-DIAS.indexOf(b)); salvar(); render(); }
+function carregarFoto(inp){
+  const f=inp.files[0]; if(!f) return;
+  const img=new Image(), r=new FileReader();
+  r.onload=()=>{img.onload=()=>{const c=document.createElement('canvas');const k=Math.min(1,240/Math.max(img.width,img.height));c.width=img.width*k;c.height=img.height*k;c.getContext('2d').drawImage(img,0,0,c.width,c.height);S.perfil.foto=c.toDataURL('image/jpeg',.72);salvar();render();aviso('Foto atualizada');};img.src=r.result;};
+  r.readAsDataURL(f);
+}
+function exportar(){
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='diario-esportivo.json';a.click();
+  aviso('Exportação iniciada');
+}
+
+/* folha */
+function abrirFolha(titulo,corpo){
+  $('#folhaIn').innerHTML=`<header><h3 id="folhaT">${titulo}</h3><button class="x" aria-label="Fechar" onclick="fecharFolha()">×</button></header>${corpo}`;
+  $('#folha').classList.add('on');$('#veu').classList.add('on');document.body.style.overflow='hidden';
+  setTimeout(()=>{const f=$('#folhaIn input,#folhaIn select');f&&f.focus({preventScroll:true})},260);
+}
+function fecharFolha(){ $('#folha').classList.remove('on');$('#veu').classList.remove('on');document.body.style.overflow=''; }
+$('#veu').onclick=fecharFolha;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharFolha();});
+const dl=(id,arr)=>`<datalist id="${id}">${arr.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+const hoje=()=>new Date().toISOString().slice(0,10);
+function addLista(k,v){ v=(v||'').trim(); if(v&&!S.listas[k].includes(v)){S.listas[k].push(v);S.listas[k].sort((a,b)=>a.localeCompare(b,'pt'));} }
+function passo(nome,valor){
+  return `<div class="passo"><button type="button" aria-label="Diminuir" onclick="mudaPasso(this,-1)">−</button><output data-n="${nome}">${valor||0}</output><button type="button" aria-label="Aumentar" onclick="mudaPasso(this,1)">+</button></div>`;
+}
+function mudaPasso(b,d){ const o=b.parentNode.querySelector('output'); o.textContent=Math.max(0,(+o.textContent)+d); atualizaNota(); }
+
+function abrirJogo(id){
+  const j=id?S.jogos.find(x=>x.id===id):{id:'',time:S.filtro.time||S.listas.times[0]||'',adv:'',comp:'',data:hoje(),hora:'',local:'',mod:'Futsal',cat:catAtual(),gp:null,gc:null,gols:0,ast:0,def_:0,defd:0,min:0,destaque:false,fase:'',fotos:'',link:'',insc:0,arb:0,comb:0,est:0,alim:0,obs:'',status:'concluido'};
+  const v=x=>x==null?'':x;
+  abrirFolha(id?'Editar jogo':'Registrar jogo',`<form id="fj" onsubmit="salvarJogo(event,'${j.id}')">
+  <fieldset><legend>Partida</legend>
+   <label>Meu time<input name="time" list="dlT" required value="${esc(j.time)}"></label>
+   <label>Adversário<input name="adv" list="dlE" required value="${esc(j.adv)}"></label>
+   <label>Competição<input name="comp" list="dlC" value="${esc(j.comp)}"></label>
+   <div class="dupla"><label>Data<input type="date" name="data" required value="${esc(j.data)}"></label><label>Hora<input type="time" name="hora" value="${esc(j.hora)}"></label></div>
+   <label>Local<input name="local" list="dlL" value="${esc(j.local)}"></label>
+   <div class="tripla">
+    <label>Modalidade<select name="mod">${['Futsal','Fut7','Campo'].map(x=>`<option ${x===j.mod?'selected':''}>${x}</option>`).join('')}</select></label>
+    <label>Categoria<select name="cat">${S.listas.categorias.map(x=>`<option ${x===j.cat?'selected':''}>${x}</option>`).join('')}</select></label>
+    <label>Fase<select name="fase">${[...new Set([...FASES,j.fase])].map(x=>`<option ${x===j.fase?'selected':''} value="${esc(x)}">${x||'Não informada'}</option>`).join('')}</select></label>
+   </div>
+   <label class="chk"><input type="checkbox" name="agendado" ${j.status==='agendado'?'checked':''} onchange="document.getElementById('blocoRes').hidden=this.checked"> Jogo ainda não aconteceu</label>
+  </fieldset>
+  <div id="blocoRes" ${j.status==='agendado'?'hidden':''}>
+  <fieldset><legend>Placar</legend>
+   <div class="placar-in">
+     <label>Meu time<input name="gp" inputmode="numeric" pattern="[0-9]*" value="${v(j.gp)}" oninput="resAuto()"></label>
+     <span class="vs">x</span>
+     <label>Adversário<input name="gc" inputmode="numeric" pattern="[0-9]*" value="${v(j.gc)}" oninput="resAuto()"></label>
+   </div>
+   <div class="res-auto" id="resAuto"></div>
+  </fieldset>
+  <fieldset><legend>Desempenho de ${esc(S.perfil.nome)}</legend>
+   <div class="tripla"><label>Gols${passo('gols',j.gols)}</label><label>Assistências${passo('ast',j.ast)}</label><label>Minutos${passo('min',j.min)}</label></div>
+   ${goleiro()?`<div class="dupla"><label>Defesas${passo('def_',j.def_)}</label><label>Defesas difíceis${passo('defd',j.defd)}</label></div>`:''}
+   <label class="chk"><input type="checkbox" name="destaque" ${j.destaque?'checked':''} onchange="atualizaNota()"> Destaque do jogo</label>
+   <div class="nota-prev" id="notaPrev" aria-live="polite"></div>
+  </fieldset>
+  </div>
+  <fieldset><legend>Custos do jogo</legend>
+   <div class="dupla"><label>Inscrição (R$)<input name="insc" inputmode="decimal" value="${j.insc||''}"></label><label>Arbitragem (R$)<input name="arb" inputmode="decimal" value="${j.arb||''}"></label></div>
+   <div class="tripla"><label>Combustível<input name="comb" inputmode="decimal" value="${j.comb||''}"></label><label>Estacion.<input name="est" inputmode="decimal" value="${j.est||''}"></label><label>Alimentação<input name="alim" inputmode="decimal" value="${j.alim||''}"></label></div>
+  </fieldset>
+  <fieldset><legend>Links e observações</legend>
+   <label>Link das fotos<input name="fotos" type="url" placeholder="https://" value="${esc(j.fotos)}"></label>
+   <label>Link do jogo<input name="link" type="url" placeholder="https://" value="${esc(j.link)}"></label>
+   <label>Observações<textarea name="obs" rows="2">${esc(j.obs)}</textarea></label>
+  </fieldset>
+  <div class="acoes"><button class="btn">${id?'Salvar alterações':'Registrar jogo'}</button>
+  ${id?`<button type="button" class="btn perigo" onclick="excluirJogo('${id}')">Excluir jogo</button>`:''}</div>
+  ${dl('dlT',S.listas.times)}${dl('dlE',S.listas.equipes)}${dl('dlC',S.listas.competicoes)}${dl('dlL',S.listas.locais)}
+  </form>`);
+  resAuto();
+}
+function atualizaNota(){
+  const f=$('#fj'), el=$('#notaPrev'); if(!f||!el) return;
+  const g=n=>+(f.querySelector(`output[data-n="${n}"]`)?.textContent||0);
+  const j={status:'concluido',gp:f.gp.value===''?null:+f.gp.value,gc:f.gc.value===''?null:+f.gc.value,gols:g('gols'),ast:g('ast'),min:g('min'),def_:g('def_'),defd:g('defd'),destaque:f.destaque.checked};
+  const n=calcNota(j);
+  el.innerHTML=n?`<span class="nota ${clsNota(n.v)}">${fNota(n.v)}</span><ul>${n.it.map(([l,v])=>`<li><span>${l}</span><span>${l==='Base'?fNota(v):(v>0?'+':'')+fNota(v)}</span></li>`).join('')}</ul>`
+    :`<span class="muted" style="font-size:.9rem">Informe o placar para calcular a nota do jogo.</span>`;
+}
+function resAuto(){
+  atualizaNota();
+  const f=$('#fj'); if(!f) return; const a=f.gp.value,b=f.gc.value,e=$('#resAuto');
+  if(a===''||b===''){e.textContent='';return;}
+  const x=+a>+b?'V':+a<+b?'D':'E'; e.textContent=RES_N[x]; e.style.color=`var(--${{V:'vit',E:'emp',D:'der'}[x]})`;
+}
+const num=v=>+(String(v||'').replace(',','.'))||0;
+function salvarJogo(ev,id){
+  ev.preventDefault(); const f=ev.target, g=n=>+(f.querySelector(`output[data-n="${n}"]`)?.textContent||0);
+  const ag=f.agendado.checked;
+  const j={id:id||'j'+uid(),time:f.time.value.trim(),adv:f.adv.value.trim(),comp:f.comp.value.trim(),data:f.data.value,hora:f.hora.value,local:f.local.value.trim(),
+    mod:f.mod.value,cat:f.cat.value,fase:f.fase.value,status:ag?'agendado':'concluido',
+    gp:ag||f.gp.value===''?null:+f.gp.value,gc:ag||f.gc.value===''?null:+f.gc.value,
+    gols:ag?0:g('gols'),ast:ag?0:g('ast'),min:ag?0:g('min'),def_:ag?0:g('def_'),defd:ag?0:g('defd'),destaque:!ag&&f.destaque.checked,
+    insc:num(f.insc.value),arb:num(f.arb.value),comb:num(f.comb.value),est:num(f.est.value),alim:num(f.alim.value),
+    fotos:f.fotos.value,link:f.link.value,obs:f.obs.value,temporada:+f.data.value.slice(0,4)};
+  if(!ag&&(j.gp==null||j.gc==null)){aviso('Informe o placar ou marque como jogo futuro');return;}
+  addLista('times',j.time);addLista('equipes',j.adv);addLista('competicoes',j.comp);addLista('locais',j.local);
+  const i=S.jogos.findIndex(x=>x.id===id); if(i>=0)S.jogos[i]=j; else S.jogos.push(j);
+  salvar(); fecharFolha(); render(); aviso(id?'Jogo atualizado':'Jogo registrado');
+}
+function excluirJogo(id){ if(!confirm('Excluir este jogo?'))return; S.jogos=S.jogos.filter(j=>j.id!==id); salvar(); fecharFolha(); render(); aviso('Jogo excluído'); }
+
+function formGen(titulo,campos,onSave){
+  window._fs=onSave;
+  abrirFolha(titulo,`<form onsubmit="event.preventDefault();_fs(this);fecharFolha();salvar();render()">${campos}<div class="acoes"><button class="btn">Salvar</button></div></form>`);
+}
+const selT=(nome='time')=>`<label>Time<select name="${nome}">${S.listas.times.map(t=>`<option ${t===S.filtro.time?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
+function formMens(){ formGen('Mensalidade',`<div class="dupla"><label>Mês<input type="month" name="mes" required value="${hoje().slice(0,7)}"></label><label>Valor (R$)<input name="valor" inputmode="decimal" required></label></div>${selT()}`,
+  f=>{S.mensalidades.push({id:'m'+uid(),mes:f.mes.value,time:f.time.value,valor:num(f.valor.value)});aviso('Mensalidade registrada');}); }
+function formLog(){ formGen('Custo logístico',`<label>Tipo<select name="tipo"><option>Combustível</option><option>Estacionamento</option><option>Alimentação</option></select></label><div class="dupla"><label>Data<input type="date" name="data" required value="${hoje()}"></label><label>Valor (R$)<input name="valor" inputmode="decimal" required></label></div>${selT()}<label>Descrição<input name="desc"></label>`,
+  f=>{S.logistica.push({id:'l'+uid(),tipo:f.tipo.value,data:f.data.value,valor:num(f.valor.value),time:f.time.value,desc:f.desc.value});aviso('Custo registrado');}); }
+function formUnif(){ formGen('Uniforme',`<label>Tipo<select name="tipo"><option>Uniforme de treino</option><option>Uniforme de jogo</option><option>Uniforme de passeio</option><option>Chuteira / tênis</option><option>Outro</option></select></label><div class="dupla"><label>Data<input type="date" name="data" required value="${hoje()}"></label><label>Valor (R$)<input name="valor" inputmode="decimal" required></label></div>${selT()}`,
+  f=>{S.uniformes.push({id:'u'+uid(),tipo:f.tipo.value,data:f.data.value,valor:num(f.valor.value),time:f.time.value});aviso('Uniforme registrado');}); }
+function formConq(){ formGen('Conquista do time',`<label>Campeonato<input name="camp" list="dlC2" required></label><div class="dupla"><label>Colocação final<select name="posicao">${COLOC.map(c=>`<option>${c}</option>`).join('')}</select></label><label>Temporada<input name="temporada" inputmode="numeric" value="${ANO}"></label></div>${selT()}${dl('dlC2',S.listas.competicoes)}`,
+  f=>{S.conquistas.push({id:'c'+uid(),camp:f.camp.value,posicao:f.posicao.value,temporada:f.temporada.value,time:f.time.value});addLista('competicoes',f.camp.value);aviso('Conquista registrada');}); }
+function formInd(){ formGen('Prêmio individual',`<label>Prêmio<select name="premio">${PREMIOS.map(c=>`<option>${c}</option>`).join('')}</select></label><label>Campeonato<input name="camp" list="dlC3" required></label>${selT()}${dl('dlC3',S.listas.competicoes)}`,
+  f=>{S.individuais.push({id:'i'+uid(),premio:f.premio.value,camp:f.camp.value,time:f.time.value});aviso('Prêmio registrado');}); }
+function formFoto(){
+  abrirFolha('Foto especial',`<form onsubmit="salvarFoto(event)"><label>Título<input name="titulo" required></label>
+  ${CFG.modo==='google'?'<label>Arquivo do aparelho<input type="file" name="arq" accept="image/*,video/*"></label><div class="muted" style="font-size:.85rem;margin:-4px 0 10px">O arquivo vai para a pasta "Diário Esportivo - Fotos" no seu Drive. Ou informe um link:</div>':''}
+  <label>Link<input name="url" type="url" placeholder="https://"></label><div class="acoes"><button class="btn">Salvar</button></div></form>`);
+}
+async function salvarFoto(ev){
+  ev.preventDefault(); const f=ev.target, b=f.querySelector('.btn'); let url=f.url.value.trim();
+  const arq=f.arq&&f.arq.files[0];
+  if(!arq&&!url){aviso('Escolha um arquivo ou informe um link');return;}
+  if(arq){
+    if(!navigator.onLine){aviso('Sem internet para enviar o arquivo');return;}
+    try{ if(!tokenValido()) await pedirToken(''); b.disabled=true; b.textContent='Enviando arquivo'; url=(await enviarFoto(arq)).webViewLink; }
+    catch(e){ aviso(e.message); b.disabled=false; b.textContent='Salvar'; return; }
+  }
+  S.fotosEspeciais.push({id:'f'+uid(),titulo:f.titulo.value,url}); salvar(); fecharFolha(); render(); aviso('Foto adicionada');
+}
+function formLista(k,n){ formGen('Adicionar em '+n,`<label>Nome<input name="v" required></label><div class="muted" style="font-size:.85rem">Itens atuais: ${S.listas[k].slice(0,8).map(esc).join(', ')}${S.listas[k].length>8?'…':''}</div>`,
+  f=>{addLista(k,f.v.value);aviso('Item adicionado');}); }
+function editarOrcamento(){ formGen('Orçamento mensal',`<label>Valor disponível por mês (R$)<input name="v" inputmode="decimal" required value="${S.orcamento}"></label>`,f=>{S.orcamento=num(f.v.value);aviso('Orçamento atualizado');}); }
+
+
+/* ===================== GOOGLE DRIVE / SHEETS ===================== */
+// Cole aqui o Client ID OAuth (tipo "Aplicativo da Web") criado no Google Cloud.
+// Também é possível informar pelo próprio app, na tela de login ou em Atleta > Conta.
+const CLIENT_ID_PADRAO='';
+const CFG_KEY='diario-esportivo-cfg';
+const SCOPES='https://www.googleapis.com/auth/drive.file email';
+const APP_TAG='diario-esportivo';
+const SHEETS='https://sheets.googleapis.com/v4/spreadsheets';
+const DRIVE='https://www.googleapis.com/drive/v3/files';
+let CFG; try{CFG=JSON.parse(localStorage.getItem(CFG_KEY))||{};}catch(e){CFG={};}
+function salvarCfg(){ try{localStorage.setItem(CFG_KEY,JSON.stringify(CFG));}catch(e){} }
+const clientId=()=>CFG.clientId||CLIENT_ID_PADRAO;
+const tokenValido=()=>!!CFG.token&&CFG.exp>Date.now();
+
+function gisPronto(){
+  return new Promise((res,rej)=>{let n=0;const t=setInterval(()=>{
+    if(window.google&&google.accounts&&google.accounts.oauth2){clearInterval(t);res();}
+    else if(++n>80){clearInterval(t);rej(new Error('Não foi possível carregar o login do Google. Verifique a internet.'));}
+  },100);});
+}
+async function pedirToken(prompt){
+  await gisPronto();
+  return new Promise((res,rej)=>{
+    const tc=google.accounts.oauth2.initTokenClient({client_id:clientId(),scope:SCOPES,
+      callback:r=>{ if(r.error){rej(Object.assign(new Error(r.error_description||r.error),{auth:true}));return;}
+        CFG.token=r.access_token; CFG.exp=Date.now()+((+r.expires_in||3600)-60)*1000; salvarCfg(); res(r.access_token); },
+      error_callback:e=>rej(Object.assign(new Error(e.type==='popup_closed'?'Login cancelado':'Login não concluído'),{auth:true}))});
+    tc.requestAccessToken({prompt});
+  });
+}
+async function api(url,opts={}){
+  if(!tokenValido()) throw Object.assign(new Error('Sessão do Google expirada'),{auth:true});
+  const h={Authorization:'Bearer '+CFG.token,...(opts.headers||{})};
+  if(typeof opts.body==='string') h['Content-Type']='application/json';
+  const r=await fetch(url,{...opts,headers:h});
+  if(r.status===401){CFG.token='';salvarCfg();throw Object.assign(new Error('Sessão do Google expirada'),{auth:true});}
+  if(!r.ok){let m='';try{m=(await r.json()).error.message;}catch(e){}throw Object.assign(new Error(`Google respondeu ${r.status}${m?': '+m:''}`),{status:r.status});}
+  return r.status===204?null:r.json();
+}
+
+/* estrutura da planilha */
+const TAB={
+  'Jogos':{col:'jogos',cols:[['id','ID'],['data','Data','d'],['hora','Hora','h'],['time','Time'],['adv','Adversário'],['comp','Competição'],['local','Local'],['mod','Modalidade'],['cat','Categoria'],['fase','Fase'],['status','Status','s'],['gp','Gols meu time','nn'],['gc','Gols adversário','nn'],['_res','Resultado','x'],['gols','Gols','n'],['ast','Assistências','n'],['min','Minutos','n'],['def_','Defesas','n'],['defd','Defesas difíceis','n'],['destaque','Destaque','b'],['_nota','Nota','x'],['insc','Inscrição','n'],['arb','Arbitragem','n'],['comb','Combustível','n'],['est','Estacionamento','n'],['alim','Alimentação','n'],['_custo','Custo total','x'],['fotos','Link fotos'],['link','Link jogo'],['obs','Observações']]},
+  'Mensalidades':{col:'mensalidades',cols:[['id','ID'],['mes','Mês','m'],['time','Time'],['valor','Valor','n']]},
+  'Logística':{col:'logistica',cols:[['id','ID'],['data','Data','d'],['tipo','Tipo'],['valor','Valor','n'],['time','Time'],['desc','Descrição']]},
+  'Uniformes':{col:'uniformes',cols:[['id','ID'],['data','Data','d'],['tipo','Tipo'],['valor','Valor','n'],['time','Time']]},
+  'Conquistas':{col:'conquistas',cols:[['id','ID'],['camp','Campeonato'],['posicao','Colocação'],['temporada','Temporada'],['time','Time']]},
+  'Prêmios':{col:'individuais',cols:[['id','ID'],['premio','Prêmio'],['camp','Campeonato'],['time','Time']]},
+  'Fotos':{col:'fotosEspeciais',cols:[['id','ID'],['titulo','Título'],['url','Link']]}
+};
+const ABAS=[...Object.keys(TAB),'Cadastro','Listas'];
+const LISTAS=[['times','Meus times'],['competicoes','Competições'],['locais','Locais'],['equipes','Adversários'],['categorias','Categorias']];
+const rng=n=>`'${n}'!A1:AZ`;
+
+function serialData(v){ return new Date(Date.UTC(1899,11,30)+Math.round(v*864e5)); }
+function lerData(v){
+  if(v===''||v==null) return '';
+  if(typeof v==='number') return serialData(v).toISOString().slice(0,10);
+  const s=String(v).trim(), m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:s.slice(0,10);
+}
+function lerHora(v){
+  if(v===''||v==null) return '';
+  if(typeof v==='number'){const t=Math.round((v%1)*1440);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
+  return String(v).slice(0,5);
+}
+function lerMes(v){ if(typeof v==='number') return serialData(v).toISOString().slice(0,7); const s=String(v||''); const m=s.match(/^(\d{1,2})\/(\d{4})/); return m?`${m[2]}-${m[1].padStart(2,'0')}`:s.slice(0,7); }
+
+function paraLinhas(t){
+  const out=[t.cols.map(c=>c[1])];
+  (S[t.col]||[]).forEach(o=>out.push(t.cols.map(([k,,tp])=>{
+    if(k==='_res') return RES_N[resultado(o)]||'';
+    if(k==='_custo') return custoJogo(o);
+    if(k==='_nota'){ const n=calcNota(o); return n?n.v:''; }
+    if(tp==='b') return o[k]?'Sim':'Não';
+    if(tp==='s') return o.status==='agendado'?'Agendado':'Concluído';
+    const v=o[k]; return v==null?'':v;
+  })));
+  return out;
+}
+function deLinhas(t,vals){
+  if(!vals||!vals.length) return [];
+  const idx={}; vals[0].forEach((h,i)=>idx[String(h).trim()]=i);
+  return vals.slice(1).filter(r=>r.some(c=>c!==''&&c!=null)).map(r=>{
+    const o={};
+    t.cols.forEach(([k,h,tp])=>{
+      if(tp==='x') return;
+      const v=idx[h]==null?'':(r[idx[h]]??'');
+      o[k]= tp==='n'?(+String(v).replace(',','.')||0)
+          : tp==='nn'?(v===''?null:+String(v).replace(',','.'))
+          : tp==='b'?(v===true||/^s/i.test(String(v)))
+          : tp==='s'?(/agend|não/i.test(String(v))?'agendado':'concluido')
+          : tp==='d'?lerData(v) : tp==='h'?lerHora(v) : tp==='m'?lerMes(v) : String(v);
+    });
+    if(!o.id) o.id=t.col.slice(0,1)+uid();
+    if(t.col==='jogos') o.temporada=+String(o.data).slice(0,4)||ANO;
+    return o;
+  });
+}
+function cadastroLinhas(){
+  const p=S.perfil;
+  return [['Campo','Valor'],['Nome',p.nome],['Número',p.numero],['Posição',p.posicao],['Ano de nascimento',p.ano],['Categoria atual',catAtual()],
+    ['Responsável 1',p.resp[0].nome],['Telefone 1',p.resp[0].tel],['Responsável 2',p.resp[1].nome],['Telefone 2',p.resp[1].tel],
+    ['Dias de treino',S.treinos.dias.join(', ')],['Horas por treino',S.treinos.horas],['Orçamento mensal',S.orcamento],['Foto',p.foto||'']];
+}
+function deCadastro(vals){
+  const m={}; (vals||[]).slice(1).forEach(r=>m[String(r[0]).trim()]=r[1]??'');
+  if(!Object.keys(m).length) return;
+  const p=S.perfil;
+  p.nome=String(m['Nome']??p.nome); p.numero=String(m['Número']??p.numero); p.posicao=String(m['Posição']||p.posicao);
+  p.ano=+m['Ano de nascimento']||p.ano;
+  p.resp=[{nome:String(m['Responsável 1']||''),tel:String(m['Telefone 1']||'')},{nome:String(m['Responsável 2']||''),tel:String(m['Telefone 2']||'')}];
+  p.foto=String(m['Foto']||'');
+  S.treinos.dias=String(m['Dias de treino']||'').split(',').map(s=>s.trim()).filter(d=>DIAS.includes(d));
+  S.treinos.horas=+String(m['Horas por treino']).replace(',','.')||1;
+  S.orcamento=+String(m['Orçamento mensal']).replace(',','.')||0;
+}
+function listasLinhas(){
+  const mx=Math.max(...LISTAS.map(([k])=>S.listas[k].length));
+  const out=[LISTAS.map(l=>l[1])];
+  for(let i=0;i<mx;i++) out.push(LISTAS.map(([k])=>S.listas[k][i]??''));
+  return out;
+}
+function deListas(vals){
+  if(!vals||!vals.length) return;
+  const idx={}; vals[0].forEach((h,i)=>idx[String(h).trim()]=i);
+  LISTAS.forEach(([k,h])=>{ if(idx[h]!=null) S.listas[k]=vals.slice(1).map(r=>String(r[idx[h]]??'').trim()).filter(Boolean); });
+}
+
+async function criarPlanilha(){
+  const r=await api(SHEETS,{method:'POST',body:JSON.stringify({
+    properties:{title:'Diário Esportivo - '+(S.perfil.nome||'Atleta'),locale:'pt_BR',timeZone:'America/Fortaleza'},
+    sheets:ABAS.map(n=>({properties:{title:n,gridProperties:{frozenRowCount:1}}}))})});
+  CFG.sheetId=r.spreadsheetId; salvarCfg();
+  await api(`${DRIVE}/${r.spreadsheetId}`,{method:'PATCH',body:JSON.stringify({appProperties:{app:APP_TAG}})});
+  await api(`${SHEETS}/${r.spreadsheetId}:batchUpdate`,{method:'POST',body:JSON.stringify({requests:r.sheets.map(s=>({repeatCell:{
+    range:{sheetId:s.properties.sheetId,startRowIndex:0,endRowIndex:1},
+    cell:{userEnteredFormat:{backgroundColor:{red:.055,green:.42,blue:.227},textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1}}}},
+    fields:'userEnteredFormat(backgroundColor,textFormat)'}}))})});
+}
+async function acharPlanilha(){
+  if(CFG.sheetId){
+    try{const f=await api(`${DRIVE}/${CFG.sheetId}?fields=id,trashed`); if(!f.trashed) return f.id;}catch(e){if(e.auth)throw e;}
+  }
+  const q=encodeURIComponent(`appProperties has { key='app' and value='${APP_TAG}' } and trashed=false and mimeType='application/vnd.google-apps.spreadsheet'`);
+  const r=await api(`${DRIVE}?q=${q}&orderBy=modifiedTime desc&fields=files(id,name)`);
+  return r.files&&r.files[0]?r.files[0].id:null;
+}
+async function garantirAbas(){
+  const r=await api(`${SHEETS}/${CFG.sheetId}?fields=sheets.properties.title`);
+  const tem=r.sheets.map(s=>s.properties.title), falta=ABAS.filter(a=>!tem.includes(a));
+  if(falta.length) await api(`${SHEETS}/${CFG.sheetId}:batchUpdate`,{method:'POST',body:JSON.stringify({requests:falta.map(t=>({addSheet:{properties:{title:t,gridProperties:{frozenRowCount:1}}}}))})});
+}
+async function enviar(){
+  const id=CFG.sheetId;
+  await api(`${SHEETS}/${id}/values:batchClear`,{method:'POST',body:JSON.stringify({ranges:ABAS.map(rng)})});
+  await api(`${SHEETS}/${id}/values:batchUpdate`,{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:[
+    ...Object.entries(TAB).map(([n,t])=>({range:`'${n}'!A1`,values:paraLinhas(t)})),
+    {range:"'Cadastro'!A1",values:cadastroLinhas()},{range:"'Listas'!A1",values:listasLinhas()}]})});
+  CFG.ultimaSync=Date.now(); salvarCfg();
+}
+async function baixar(){
+  const q=ABAS.map(n=>'ranges='+encodeURIComponent(rng(n))).join('&');
+  const r=await api(`${SHEETS}/${CFG.sheetId}/values:batchGet?${q}&valueRenderOption=UNFORMATTED_VALUE`);
+  const v={}; r.valueRanges.forEach((vr,i)=>v[ABAS[i]]=vr.values||[]);
+  Object.entries(TAB).forEach(([n,t])=>{S[t.col]=deLinhas(t,v[n]);});
+  deCadastro(v['Cadastro']); deListas(v['Listas']);
+  localStorage.setItem(KEY,JSON.stringify(S)); CFG.ultimaSync=Date.now(); salvarCfg();
+}
+
+/* sincronização */
+let sincronizando=false, timerSync=null, statusAtual={k:'',msg:''};
+function marcarAlteracao(){ if(CFG.modo!=='google')return; CFG.dirty=true; salvarCfg(); setStatus(navigator.onLine?'pendente':'offline'); clearTimeout(timerSync); timerSync=setTimeout(sincronizar,1500); }
+async function sincronizar(){
+  if(CFG.modo!=='google'||!CFG.sheetId) return setStatus('local');
+  if(!navigator.onLine) return setStatus('offline');
+  if(!tokenValido()) return setStatus('reconectar');
+  if(sincronizando){clearTimeout(timerSync);timerSync=setTimeout(sincronizar,1500);return;}
+  sincronizando=true; setStatus('enviando');
+  try{ if(CFG.dirty){CFG.dirty=false;salvarCfg();await enviar();} setStatus(CFG.dirty?'pendente':'ok'); if(CFG.dirty){clearTimeout(timerSync);timerSync=setTimeout(sincronizar,1500);} }
+  catch(e){ CFG.dirty=true; salvarCfg(); setStatus(e.auth?'reconectar':'erro',e.message); }
+  finally{ sincronizando=false; }
+}
+async function recarregarDaPlanilha(){
+  if(!tokenValido()){ try{await pedirToken('');}catch(e){aviso(e.message);setStatus('reconectar');return;} }
+  try{
+    setStatus('enviando');
+    if(CFG.dirty){CFG.dirty=false;salvarCfg();await enviar();}
+    await baixar(); render(); setStatus('ok'); aviso('Dados atualizados da planilha');
+  }catch(e){ setStatus(e.auth?'reconectar':'erro',e.message); aviso(e.message); }
+}
+async function conectar(){
+  if(!clientId()){ aviso('Informe o Client ID do Google'); return; }
+  try{
+    setStatus('conectando');
+    await pedirToken(CFG.email?'':'consent');
+    if(!CFG.email){ try{const u=await api('https://www.googleapis.com/oauth2/v3/userinfo'); CFG.email=u.email;}catch(e){} }
+    const id=await acharPlanilha();
+    if(id){
+      CFG.sheetId=id; salvarCfg(); await garantirAbas();
+      if(CFG.dirty&&CFG.vinculada===id){ CFG.dirty=false; salvarCfg(); await enviar(); }
+      else await baixar();
+    }else{
+      if(!confirm(`Criar a planilha no seu Google Drive com os ${S.jogos.length} jogos que já estão no app?\n\nCancelar cria a planilha vazia.`)) S=vazio();
+      await criarPlanilha(); await enviar();
+    }
+    CFG.modo='google'; CFG.vinculada=CFG.sheetId; CFG.dirty=false; salvarCfg();
+    localStorage.setItem(KEY,JSON.stringify(S));
+    vista='inicio'; render(); setStatus('ok'); aviso('Conectado ao Google Drive');
+  }catch(e){
+    setStatus(e.auth?'reconectar':'erro',e.message); aviso(e.message);
+    if(!CFG.modo) render();
+  }
+}
+async function reconectar(){
+  try{ await pedirToken(''); setStatus('pendente'); CFG.dirty?sincronizar():recarregarDaPlanilha(); }
+  catch(e){ aviso(e.message); setStatus('reconectar'); }
+}
+function sairConta(){
+  if(!confirm('Sair da conta Google neste aparelho? Os dados continuam na planilha do Drive.'))return;
+  try{ if(CFG.token&&window.google) google.accounts.oauth2.revoke(CFG.token,()=>{}); }catch(e){}
+  CFG={clientId:CFG.clientId,tema:CFG.tema,modoCor:CFG.modoCor}; salvarCfg(); vista='inicio'; render(); setStatus('');
+}
+function usarLocal(){ CFG.modo='local'; salvarCfg(); render(); setStatus('local'); }
+function setStatus(k,msg){
+  if(k!==undefined) statusAtual={k,msg:msg||''};
+  const el=$('#status'); if(!el) return;
+  const m={
+    ok:['Sincronizado com o Drive','ok'], pendente:['Salvando no Drive','pend'], enviando:['Sincronizando','pend'], conectando:['Conectando ao Google','pend'],
+    offline:['Sem internet, salvo no aparelho','off'], reconectar:['Toque para reconectar ao Google','off'],
+    erro:['Falha ao sincronizar, toque para tentar de novo','erro'], local:['Dados só neste aparelho','loc']
+  }[statusAtual.k];
+  if(!m||!CFG.modo){el.hidden=true;return;}
+  el.hidden=false; el.className='status '+m[1]; el.textContent=m[0]; el.title=statusAtual.msg;
+}
+function cliqueStatus(){
+  const k=statusAtual.k;
+  if(k==='reconectar') reconectar();
+  else if(k==='erro'){ CFG.dirty=true; salvarCfg(); sincronizar(); }
+  else if(k==='local'){ vista='perfil'; render(); setTimeout(()=>document.getElementById('conta')?.scrollIntoView(),50); }
+}
+window.addEventListener('online',()=>{ if(CFG.modo==='google') sincronizar(); });
+window.addEventListener('offline',()=>{ if(CFG.modo==='google') setStatus('offline'); });
+
+/* fotos no Drive */
+async function pastaFotos(){
+  if(CFG.folderId){ try{const f=await api(`${DRIVE}/${CFG.folderId}?fields=id,trashed`); if(!f.trashed) return f.id;}catch(e){if(e.auth)throw e;} }
+  const q=encodeURIComponent(`appProperties has { key='app' and value='${APP_TAG}-fotos' } and trashed=false`);
+  const r=await api(`${DRIVE}?q=${q}&fields=files(id)`);
+  if(r.files&&r.files[0]) CFG.folderId=r.files[0].id;
+  else CFG.folderId=(await api(DRIVE,{method:'POST',body:JSON.stringify({name:'Diário Esportivo - Fotos',mimeType:'application/vnd.google-apps.folder',appProperties:{app:APP_TAG+'-fotos'}})})).id;
+  salvarCfg(); return CFG.folderId;
+}
+async function enviarFoto(file){
+  const pasta=await pastaFotos(), fd=new FormData();
+  fd.append('metadata',new Blob([JSON.stringify({name:file.name,parents:[pasta]})],{type:'application/json'}));
+  fd.append('file',file);
+  return api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',{method:'POST',body:fd});
+}
+
+/* tela de login */
+function telaLogin(){
+  return `<div class="login">
+    <div class="login-marca" aria-hidden="true">${esc(S.perfil.numero||"")}</div>
+    <h1>Diário Esportivo</h1>
+    <p>Jogos, gols, conquistas e custos do atleta, salvos numa planilha no seu Google Drive.</p>
+    ${clientId()?'':`<label class="login-id">Client ID do Google<input id="cid" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off"></label>`}
+    <button class="btn ouro google" onclick="${clientId()?'conectar()':"if(salvarClientId(document.getElementById('cid').value))conectar()"}">${ICONE_G}Entrar com Google</button>
+    <button class="btn fantasma" onclick="usarLocal()">Usar só neste aparelho</button>
+    <p class="login-nota">O app cria a planilha "Diário Esportivo" no seu Drive e só tem acesso aos arquivos que ele mesmo criou.</p>
+  </div>`;
+}
+function salvarClientId(v){
+  v=(v||'').trim(); if(!/\.apps\.googleusercontent\.com$/.test(v)){aviso('Client ID inválido');return false;}
+  CFG.clientId=v; salvarCfg(); return true;
+}
+const ICONE_G=`<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+function blocoConta(){
+  if(CFG.modo==='google') return `<div class="cx" style="padding:14px">
+     <div><b>${esc(CFG.email||'Conta Google')}</b></div>
+     <div class="muted" style="font-size:.9rem">${CFG.ultimaSync?'Última sincronização: '+new Date(CFG.ultimaSync).toLocaleString('pt-BR'):'Ainda não sincronizado'}</div>
+     <div class="acoes">
+      <a class="btn sec" style="text-align:center;text-decoration:none" href="https://docs.google.com/spreadsheets/d/${esc(CFG.sheetId)}" target="_blank" rel="noopener">Abrir planilha no Drive</a>
+      <button class="btn sec" onclick="recarregarDaPlanilha()">Recarregar dados da planilha</button>
+      <button class="btn sec" onclick="exportar()">Exportar dados (JSON)</button>
+      <button class="btn perigo" onclick="sairConta()">Sair da conta Google</button>
+     </div></div>`;
+  return `<div class="cx" style="padding:14px">
+     <div class="muted" style="font-size:.9rem;margin-bottom:8px">Os dados estão salvos só neste aparelho.</div>
+     ${clientId()?'':`<label>Client ID do Google<input id="cid2" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off"></label>`}
+     <div class="acoes">
+      <button class="btn sec google" onclick="${clientId()?'conectar()':"if(salvarClientId(document.getElementById('cid2').value))conectar()"}">${ICONE_G}Entrar com Google e criar planilha</button>
+      <button class="btn sec" onclick="exportar()">Exportar dados (JSON)</button>
+      <button class="btn perigo" onclick="if(confirm('Apagar tudo e voltar aos dados das planilhas originais?')){S=inicial();salvar();render();aviso('Dados restaurados')}">Restaurar dados das planilhas</button>
+     </div></div>`;
+}
+function vazio(){ const v=inicial(); v.jogos=[]; v.mensalidades=[]; return v; }
+
+document.querySelectorAll('nav [data-v]').forEach(b=>b.onclick=()=>{vista=b.dataset.v;render();});
+$('#novo').onclick=()=>abrirJogo('');
+aplicarTema();
+render();
+(async()=>{
+  if(CFG.modo!=='google'){ setStatus(CFG.modo==='local'?'local':''); return; }
+  if(!navigator.onLine) return setStatus('offline');
+  if(!tokenValido()) return setStatus('reconectar');
+  setStatus('enviando');
+  const pendente=!!CFG.dirty;
+  try{
+    if(pendente){ CFG.dirty=false; salvarCfg(); await enviar(); }
+    else { await baixar(); if(!document.querySelector('.folha.on')) render(); }
+    setStatus('ok');
+  }catch(e){ if(pendente){CFG.dirty=true;salvarCfg();} setStatus(e.auth?'reconectar':'erro',e.message); }
+})();
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
