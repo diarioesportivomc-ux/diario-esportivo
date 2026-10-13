@@ -53,8 +53,8 @@ h2{font-size:1.45rem;font-weight:700;margin:26px 0 10px}
 .fig-rodape span{font-size:.75rem;opacity:.85}
 
 /* filtros */
-.filtros{display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px;scrollbar-width:none}
-.filtros select{flex:none;background:var(--painel);border:1px solid var(--linha);border-radius:999px;padding:8px 30px 8px 12px;appearance:none;
+.filtros{display:grid;gap:8px;padding:14px 0 2px}
+.filtros select{width:100%;background:var(--painel);border:1px solid var(--linha);border-radius:999px;padding:8px 30px 8px 12px;appearance:none;
  background-image:linear-gradient(45deg,transparent 50%,var(--suave) 50%),linear-gradient(135deg,var(--suave) 50%,transparent 50%);
  background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px;background-repeat:no-repeat;font-size:.9rem}
 
@@ -159,6 +159,14 @@ label>input,label>select,label>textarea{display:block;width:100%;margin-top:4px;
 .google{display:flex;align-items:center;gap:10px;justify-content:center}
 :root[data-theme="dark"] nav button[aria-current="page"],:root[data-theme="dark"] .lnk{color:var(--ouro)}
 :root[data-theme="light"] nav button[aria-current="page"],:root[data-theme="light"] .lnk{color:var(--campo)}
+.cx small{display:block;font-size:.75rem;color:var(--suave);margin-top:2px}
+.jogo small.time-pr{font-weight:700;color:var(--tinta)}
+.tag.mod{background:var(--campo);color:#fff;border-color:var(--campo)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--painel);border:1px solid var(--linha);border-radius:12px;padding:4px;gap:4px;margin-top:12px}
+.seg button{border:0;background:none;padding:9px;border-radius:9px;font:700 1.05rem var(--cond);cursor:pointer;color:var(--suave)}
+.seg button[aria-selected="true"]{background:var(--campo);color:#fff}
+.orc+.orc{margin-top:10px}
+.orc h3{font-size:1.15rem;margin-bottom:6px}
 .media-nota{display:inline-flex;align-items:baseline;gap:6px;margin-top:8px;background:var(--ouro);color:#1B2430;border-radius:999px;padding:3px 12px}
 .media-nota b{font:800 1.35rem/1.1 var(--cond)}.media-nota span{font-size:.78rem;font-weight:600}
 .nota{display:inline-block;min-width:40px;text-align:center;font:800 1.05rem/1 var(--cond);padding:5px 6px;border-radius:8px;color:#fff;margin-top:4px}
@@ -218,15 +226,26 @@ const ANO=new Date().getFullYear();
 
 function inicial(){
   return {
-    perfil:{nome:'Caio',numero:'21',posicao:'Pivô',ano:2017,resp:[{nome:'',tel:''},{nome:'',tel:''}],foto:''},
-    jogos:SEED.jogos, mensalidades:SEED.mensalidades, uniformes:[], logistica:[],
+    perfil:{nome:'Caio',numero:'21',posicao:'Pivô',ano:2017,categoria:'',resp:[{nome:'',tel:''},{nome:'',tel:''}],foto:''},
+    jogos:SEED.jogos, mensalidades:SEED.mensalidades, uniformes:[], logistica:[], treinosReg:[],
     conquistas:[], individuais:[], fotosEspeciais:[],
-    treinos:{dias:['Ter','Qui'],horas:1}, orcamento:10000, listas:SEED.listas,
+    orcamentos:{'':{jogos:0,fixos:0}}, listas:SEED.listas,
     filtro:{time:'',temporada:String(ANO),mes:''}
   };
 }
+function normalizar(){
+  S.perfil.categoria=S.perfil.categoria||'';
+  S.treinosReg=S.treinosReg||[];
+  if(!S.orcamentos||typeof S.orcamentos!=='object') S.orcamentos={'':{jogos:+S.orcamento||0,fixos:0}};
+  S.jogos.forEach(j=>{
+    if(j.mod==='Campo') j.mod='Fut11';
+    if(j.goleiro===undefined||j.goleiro===null) j.goleiro=(+j.def_>0||+j.defd>0);
+    ['chutes','passes','recup','def_','defd'].forEach(k=>{ if(j[k]==null||j[k]==='') j[k]=0; });
+  });
+}
 let S;
 try{ S=JSON.parse(localStorage.getItem(KEY))||inicial(); }catch(e){ S=inicial(); }
+normalizar();
 function salvar(sync=true){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){aviso('Não foi possível salvar neste aparelho');} if(sync) marcarAlteracao(); }
 
 const $=s=>document.querySelector(s);
@@ -235,7 +254,12 @@ const brl=v=>'R$ '+(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maxim
 const uid=()=>Math.random().toString(36).slice(2,9);
 const resultado=j=>j.gp==null||j.gc==null||j.status==='agendado'?'':j.gp>j.gc?'V':j.gp<j.gc?'D':'E';
 const RES_N={V:'Vitória',E:'Empate',D:'Derrota'};
-const catAtual=()=>'Sub-'+(ANO-(+S.perfil.ano)+1);
+const catAuto=()=>'Sub-'+(ANO-(+S.perfil.ano)+1);
+const catAtual=()=>S.perfil.categoria||catAuto();
+const MODS=['Futsal','Fut7','Fut11'];
+const fHoras=v=>String(+v||0).replace('.',',')+'h';
+const fx=(v,d=1)=>(+v||0).toFixed(d).replace('.',',');
+function listaCats(extra){ return [...new Set([catAuto(),...S.listas.categorias,...(extra||[])].filter(Boolean))]; }
 const goleiro=()=>S.perfil.posicao==='Goleiro';
 const custoJogo=j=>(+j.insc||0)+(+j.arb||0)+(+j.comb||0)+(+j.est||0)+(+j.alim||0);
 function aviso(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(aviso.t);aviso.t=setTimeout(()=>e.classList.remove('on'),2000);}
@@ -285,22 +309,25 @@ function figurinha(js){
       <div><b>${conc.length}</b><span>jogos</span></div>
       <div><b>${conc.reduce((s,j)=>s+(+j.gols||0),0)}</b><span>gols</span></div>
       <div><b>${conc.reduce((s,j)=>s+(+j.ast||0),0)}</b><span>assist.</span></div>
-      <div><b>${conc.filter(j=>j.destaque).length}</b><span>destaques</span></div>
+      <div><b>${conc.filter(j=>j.destaque).length}</b><span>craque</span></div>
     </div></div>`;
 }
 
 /* nota por jogo */
 function calcNota(j){
   if(j.status==='agendado'||!resultado(j)) return null;
-  const it=[['Base',6]];
-  if(+j.gols) it.push([`${j.gols} gol${j.gols>1?'s':''}`, j.gols*1]);
-  if(+j.ast) it.push([`${j.ast} assistência${j.ast>1?'s':''}`, j.ast*0.7]);
-  if(j.destaque) it.push(['Destaque do jogo',1]);
+  const it=[['Base',6]], n=k=>+j[k]||0;
+  if(n('gols')) it.push([`${n('gols')} gol${n('gols')>1?'s':''}`, n('gols')*1]);
+  if(n('ast')) it.push([`${n('ast')} assistência${n('ast')>1?'s':''}`, n('ast')*0.7]);
+  if(n('chutes')) it.push([`${n('chutes')} chute${n('chutes')>1?'s':''} a gol`, n('chutes')*0.1]);
+  if(n('passes')) it.push([`${n('passes')} passe${n('passes')>1?'s':''} certo${n('passes')>1?'s':''}`, n('passes')*0.05]);
+  if(n('recup')) it.push([`${n('recup')} bola${n('recup')>1?'s':''} recuperada${n('recup')>1?'s':''}`, n('recup')*0.15]);
+  if(j.destaque) it.push(['Craque do jogo',1]);
   const r=resultado(j); if(r==='V') it.push(['Vitória',0.5]); if(r==='D') it.push(['Derrota',-0.5]);
-  if((+j.min||0)>=15) it.push(['15 minutos ou mais em quadra',0.3]);
-  if(goleiro()){
-    if(+j.def_) it.push([`${j.def_} defesa${j.def_>1?'s':''}`, j.def_*0.3]);
-    if(+j.defd) it.push([`${j.defd} defesa${j.defd>1?'s':''} difícil${j.defd>1?'s':''}`.replace('difícils','difíceis'), j.defd*0.6]);
+  if(n('min')>=15) it.push(['15 minutos ou mais em quadra',0.3]);
+  if(j.goleiro){
+    if(n('def_')) it.push([`${n('def_')} defesa${n('def_')>1?'s':''}`, n('def_')*0.3]);
+    if(n('defd')) it.push([`${n('defd')} defesa${n('defd')>1?'s difíceis':' difícil'}`, n('defd')*0.6]);
     if(+j.gc===0) it.push(['Sem sofrer gols',0.5]); else if(+j.gc>2) it.push([`${j.gc} gols sofridos`, -(j.gc-2)*0.3]);
   }
   const v=Math.max(4,Math.min(10,it.reduce((s,x)=>s+x[1],0)));
@@ -337,36 +364,56 @@ function blocoAparencia(){
   <div class="chips" style="margin-top:12px">${[['','Automático'],['light','Claro'],['dark','Escuro']].map(([v,n])=>`<button aria-pressed="${v===modo}" onclick="escolherModo('${v}')">${n}</button>`).join('')}</div>`;
 }
 
+function caixa(v,l,sub){ return `<div class="cx"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`; }
 function inicio(){
   const js=S.jogos.filter(j=>passa(j));
   const conc=js.filter(j=>j.status!=='agendado').sort((a,b)=>a.data.localeCompare(b.data));
   const r={V:0,E:0,D:0}; conc.forEach(j=>{const x=resultado(j);if(x)r[x]++;});
-  const minutos=conc.reduce((s,j)=>s+(+j.min||0),0);
+  const soma=(arr,k)=>arr.reduce((s,j)=>s+(+j[k]||0),0);
+  const minutos=soma(conc,'min');
   const prox=S.jogos.filter(j=>j.status==='agendado'&&(!S.filtro.time||j.time===S.filtro.time)).sort((a,b)=>a.data.localeCompare(b.data));
   const gm=Array(12).fill(0); conc.forEach(j=>gm[+j.data.slice(5,7)-1]+=+j.gols||0);
   const mx=Math.max(1,...gm);
-  const gp=conc.reduce((s,j)=>s+(+j.gp||0),0), gc=conc.reduce((s,j)=>s+(+j.gc||0),0);
   const notas=conc.map(calcNota).filter(Boolean).map(x=>x.v);
   const nm=Array(12).fill(0).map((_,i)=>mediaNotas(conc.filter(j=>+j.data.slice(5,7)===i+1)));
-  return `
-  ${figurinha(js)}
+  const gk=conc.filter(j=>j.goleiro);
+  const tr=S.treinosReg.filter(t=>passa(t));
+  const horasTr=soma(tr,'horas');
+  const conqN=S.conquistas.filter(c=>(!S.filtro.time||c.time===S.filtro.time)&&(!S.filtro.temporada||String(c.temporada)===S.filtro.temporada)).length
+             +S.individuais.filter(c=>!S.filtro.time||c.time===S.filtro.time).length;
+  const porJ=(v,n)=>n?fx(v/n,2):'0';
+  return `${figurinha(js)}
   ${barraFiltros()}
   <h2>Resultados</h2>
   <div class="placar-geral"><div class="V"><b>${r.V}</b><span>vitórias</span></div><div class="E"><b>${r.E}</b><span>empates</span></div><div class="D"><b>${r.D}</b><span>derrotas</span></div></div>
   <div class="forma" aria-label="Últimos resultados">${conc.slice(-10).map(j=>{const x=resultado(j);return x?`<i class="${x}" title="${esc(j.adv)} ${j.gp}x${j.gc}">${x}</i>`:''}).join('')}</div>
   <h2>Números do atleta</h2>
   <div class="grade">
-    <div class="cx"><b>${minutos}</b><span>minutos jogados</span></div>
-    <div class="cx"><b>${conc.length?(minutos/conc.length).toFixed(0):0}</b><span>min por jogo</span></div>
-    <div class="cx"><b>${conc.length?(conc.reduce((s,j)=>s+(+j.gols||0),0)/conc.length).toFixed(2).replace('.',','):'0'}</b><span>gols por jogo</span></div>
-    <div class="cx"><b>${gp}</b><span>gols do time</span></div>
-    <div class="cx"><b>${gc}</b><span>gols sofridos</span></div>
-    <div class="cx"><b>${conc.length?Math.round(r.V/conc.length*100):0}%</b><span>aproveitamento</span></div>
-    <div class="cx"><b>${fNota(mediaNotas(conc))}</b><span>nota média</span></div>
-    <div class="cx"><b>${fNota(notas.length?Math.max(...notas):null)}</b><span>melhor nota</span></div>
-    <div class="cx"><b>${notas.filter(v=>v>=8).length}</b><span>jogos com nota 8+</span></div>
-    ${goleiro()?`<div class="cx"><b>${conc.reduce((s,j)=>s+(+j.def_||0),0)}</b><span>defesas</span></div><div class="cx"><b>${conc.reduce((s,j)=>s+(+j.defd||0),0)}</b><span>defesas difíceis</span></div>`:''}
+    ${caixa(minutos,'minutos jogados',`${conc.length?Math.round(minutos/conc.length):0} por jogo`)}
+    ${caixa(porJ(soma(conc,'gols'),conc.length),'gols por jogo')}
+    ${caixa(soma(conc,'ast'),'assistências')}
+    ${caixa(soma(conc,'chutes'),'chutes a gol')}
+    ${caixa(soma(conc,'passes'),'passes certos')}
+    ${caixa(soma(conc,'recup'),'bolas recuperadas')}
+    ${caixa((conc.length?Math.round(r.V/conc.length*100):0)+'%','aproveitamento')}
+    ${caixa(fNota(mediaNotas(conc)),'nota média')}
+    ${caixa(fNota(notas.length?Math.max(...notas):null),'melhor nota')}
   </div>
+  ${gk.length?`<h2>Como goleiro</h2>
+  <div class="grade">
+    ${caixa(gk.length,'jogos no gol')}
+    ${caixa(porJ(soma(gk,'gc'),gk.length),'gols sofridos por jogo')}
+    ${caixa(porJ(soma(gk,'def_'),gk.length),'defesas por jogo')}
+    ${caixa(soma(gk,'defd'),'defesas difíceis')}
+    ${caixa(gk.filter(j=>j.destaque).length,'craque do jogo')}
+    ${caixa(conqN,'conquistas')}
+  </div>`:''}
+  <h2>Treinos</h2>
+  ${tr.length?`<div class="grade">
+    ${caixa(tr.length,'treinos')}
+    ${caixa(fHoras(horasTr),'horas treinadas')}
+    ${caixa(fHoras(Math.round(horasTr/tr.length*10)/10),'média por treino')}
+  </div>`:`<div class="lst"><div class="vazio">Nenhum treino no período. Registre pelo botão +.</div></div>`}
   <h2>Gols por mês</h2>
   <div class="barras">${gm.map(v=>`<div><em>${v||''}</em><s style="height:${Math.round(v/mx*88)}px"></s></div>`).join('')}</div>
   <div class="rot">${MESES.map(m=>`<span>${m}</span>`).join('')}</div>
@@ -380,26 +427,43 @@ function inicio(){
 function cardJogo(j){
   const x=resultado(j);
   const cor=x?`var(--${{V:'vit',E:'emp',D:'der'}[x]})`:'var(--linha)';
+  const n=x?calcNota(j):null;
   return `<button class="jogo" onclick="abrirJogo('${j.id}')">
     <i style="background:${cor}"></i>
     <div><div class="adv">${esc(j.adv||'Adversário')}</div>
-      <small>${fData(j.data)}${j.hora?' às '+esc(j.hora):''}, ${esc(j.comp)}</small>
-      <small>${esc(j.time)}</small>
-      <div style="margin-top:5px">${j.gols?`<span class="tag">${j.gols} gol${j.gols>1?'s':''}</span>`:''}${j.ast?`<span class="tag">${j.ast} assist.</span>`:''}${j.destaque?'<span class="tag ouro">Destaque</span>':''}${j.fase?`<span class="tag">${esc(j.fase)}</span>`:''}</div>
+      <small>${fData(j.data)}${j.hora?' às '+esc(j.hora):''}${j.comp?', '+esc(j.comp):''}</small>
+      ${j.local?`<small>${esc(j.local)}</small>`:''}
+      <small class="time-pr">${esc(j.time)}</small>
+      <div style="margin-top:5px">${j.mod?`<span class="tag mod">${esc(j.mod)}</span>`:''}${j.fase?`<span class="tag">${esc(j.fase)}</span>`:''}${j.goleiro?'<span class="tag">Goleiro</span>':''}${j.gols?`<span class="tag">${j.gols} gol${j.gols>1?'s':''}</span>`:''}${j.ast?`<span class="tag">${j.ast} assist.</span>`:''}${j.destaque?'<span class="tag ouro">Craque do jogo</span>':''}</div>
     </div>
-    <div class="pl">${x?`${j.gp} x ${j.gc}<small>${RES_N[x]}</small>${(n=>n?`<span class="nota ${clsNota(n.v)}" title="Nota do jogo">${fNota(n.v)}</span>`:'')(calcNota(j))}`:`<small>Agendado</small>`}</div>
+    <div class="pl">${x?`${j.gp} x ${j.gc}<small>${RES_N[x]}</small>${n?`<span class="nota ${clsNota(n.v)}" title="Nota do jogo">${fNota(n.v)}</span>`:''}`:`<small>Agendado</small>`}</div>
   </button>`;
 }
-
+function cardTreino(t){
+  return `<button class="jogo" onclick="abrirTreino('${t.id}')">
+    <i style="background:var(--campo)"></i>
+    <div><div class="adv">Treino</div>
+      <small>${fData(t.data)}${t.cat?', '+esc(t.cat):''}</small>
+      <small class="time-pr">${esc(t.time)}</small>
+      <div style="margin-top:5px">${t.mod?`<span class="tag mod">${esc(t.mod)}</span>`:''}${t.obs?`<span class="tag">${esc(t.obs.slice(0,30))}</span>`:''}</div>
+    </div>
+    <div class="pl">${fHoras(t.horas)}<small>de treino</small></div>
+  </button>`;
+}
+let abaJ='jogos';
 function telaJogos(){
+  const seg=`<div class="seg" role="tablist"><button role="tab" aria-selected="${abaJ==='jogos'}" onclick="abaJ='jogos';render()">Jogos</button><button role="tab" aria-selected="${abaJ==='treinos'}" onclick="abaJ='treinos';render()">Treinos</button></div>`;
+  const porMes=(arr,fn)=>{let html='',m0='';arr.forEach(x=>{const m=x.data.slice(0,7);if(m!==m0){m0=m;html+=`<div class="mes">${MESES_L[+m.slice(5)-1]} ${m.slice(0,4)}</div>`;}html+=fn(x);});return html;};
+  if(abaJ==='treinos'){
+    const tr=S.treinosReg.filter(t=>passa(t)).sort((a,b)=>b.data.localeCompare(a.data));
+    return `<h2 style="margin-top:18px">Treinos</h2>${seg}${barraFiltros()}
+    ${tr.length?porMes(tr,cardTreino):`<div class="lst" style="margin-top:14px"><div class="vazio">Nenhum treino com esses filtros. Registre pelo botão +.</div></div>`}`;
+  }
   const q=busca.toLowerCase();
   const js=S.jogos.filter(j=>passa(j)).filter(j=>!q||(j.adv+' '+j.comp+' '+j.local).toLowerCase().includes(q)).sort((a,b)=>b.data.localeCompare(a.data));
-  let html=`<h2 style="margin-top:18px">Jogos</h2>${barraFiltros()}
-  <input class="busca" type="search" placeholder="Buscar adversário, competição ou local" value="${esc(busca)}" oninput="busca=this.value;clearTimeout(window._b);window._b=setTimeout(()=>{render();const i=document.querySelector('.busca');i.focus();i.setSelectionRange(i.value.length,i.value.length)},300)">`;
-  let mesAtual='';
-  if(!js.length) html+=`<div class="lst" style="margin-top:14px"><div class="vazio">Nenhum jogo com esses filtros.</div></div>`;
-  js.forEach(j=>{const m=j.data.slice(0,7);if(m!==mesAtual){mesAtual=m;html+=`<div class="mes">${MESES_L[+m.slice(5)-1]} ${m.slice(0,4)}</div>`;}html+=cardJogo(j);});
-  return html;
+  return `<h2 style="margin-top:18px">Jogos</h2>${seg}${barraFiltros()}
+  <input class="busca" type="search" placeholder="Buscar adversário, competição ou local" value="${esc(busca)}" oninput="busca=this.value;clearTimeout(window._b);window._b=setTimeout(()=>{render();const i=document.querySelector('.busca');i.focus();i.setSelectionRange(i.value.length,i.value.length)},300)">
+  ${js.length?porMes(js,cardJogo):`<div class="lst" style="margin-top:14px"><div class="vazio">Nenhum jogo com esses filtros.</div></div>`}`;
 }
 
 function custos(){
@@ -421,22 +485,16 @@ function custos(){
   const mx=Math.max(1,...Object.values(tipos));
   // orçamento: mês do filtro ou mês atual
   const mesRef=(S.filtro.temporada||String(ANO))+'-'+(S.filtro.mes||String(new Date().getMonth()+1).padStart(2,'0'));
-  const noMes=d=>(d||'').startsWith(mesRef);
-  const gastoMes=S.jogos.filter(j=>noMes(j.data)&&(!S.filtro.time||j.time===S.filtro.time)).reduce((s,j)=>s+custoJogo(j),0)
-    +S.mensalidades.filter(m=>m.mes===mesRef&&(!S.filtro.time||m.time===S.filtro.time)).reduce((s,m)=>s+(+m.valor),0)
-    +S.uniformes.filter(u=>noMes(u.data)).reduce((s,u)=>s+(+u.valor),0)
-    +S.logistica.filter(l=>noMes(l.data)).reduce((s,l)=>s+(+l.valor),0);
-  const pct=Math.min(100,gastoMes/(+S.orcamento||1)*100);
-  const sobra=(+S.orcamento||0)-gastoMes;
+  const noMes=d=>(d||'').startsWith(mesRef), porTime=x=>!S.filtro.time||x.time===S.filtro.time;
+  const gastoJ=S.jogos.filter(j=>noMes(j.data)&&porTime(j)).reduce((s,j)=>s+custoJogo(j),0)
+    +S.logistica.filter(l=>noMes(l.data)&&porTime(l)).reduce((s,l)=>s+(+l.valor||0),0);
+  const gastoF=S.mensalidades.filter(m=>m.mes===mesRef&&porTime(m)).reduce((s,m)=>s+(+m.valor||0),0)
+    +S.uniformes.filter(u=>noMes(u.data)&&porTime(u)).reduce((s,u)=>s+(+u.valor||0),0);
+  const orc=S.orcamentos[S.filtro.time||'']||{jogos:0,fixos:0};
   const [ma,mm]=mesRef.split('-');
   return `<h2 style="margin-top:18px">Custos</h2>${barraFiltros()}
-  <h2>Orçamento de ${MESES_L[+mm-1]}</h2>
-  <div class="orc">
-    <div class="big">${brl(gastoMes)}</div><div class="muted">gastos de ${brl(S.orcamento)} disponíveis</div>
-    <div class="medidor"><i style="width:${pct}%;background:${pct>=100?'var(--der)':pct>80?'var(--emp)':'var(--vit)'}"></i></div>
-    <div style="display:flex;justify-content:space-between;font-size:.9rem"><span>${sobra>=0?'Disponível':'Acima do orçamento'}</span><b>${brl(Math.abs(sobra))}</b></div>
-    <button class="lnk" onclick="editarOrcamento()">Alterar orçamento mensal</button>
-  </div>
+  ${painelOrc('Jogos e logística','Inscrição, arbitragem, combustível, estacionamento e alimentação',gastoJ,orc.jogos,'jogos',MESES_L[+mm-1])}
+  ${painelOrc('Mensalidades e uniformes','Mensalidades e compras de uniforme',gastoF,orc.fixos,'fixos',MESES_L[+mm-1])}
   <div class="linha-t"><h2>Por tipo</h2><b style="font:800 1.4rem var(--cond)">${brl(total)}</b></div>
   <div class="chips">${Object.keys(tipos).map(k=>`<button aria-pressed="${tiposCusto.includes(k)}" onclick="alternaTipo('${k}')">${k}</button>`).join('')}</div>
   ${Object.entries(tipos).filter(([k])=>tiposCusto.includes(k)).map(([k,v])=>`<div class="custo-bar"><div><span>${k}</span><b>${brl(v)}</b></div><s><i style="width:${v/mx*100}%"></i></s></div>`).join('')}
@@ -446,6 +504,18 @@ function custos(){
   ${listaSimples(log,l=>`<span><b>${esc(l.tipo)}</b><br><small class="muted">${fData(l.data)} ${esc(l.desc||'')}</small></span><span>${brl(l.valor)}</span>`,'logistica','Custos de combustível, estacionamento e alimentação fora dos jogos.')}
   <div class="linha-t"><h2>Uniformes</h2><button class="lnk" onclick="formUnif()">Adicionar</button></div>
   ${listaSimples(unif,u=>`<span><b>${esc(u.tipo)}</b><br><small class="muted">${fData(u.data)} ${esc(u.time||'')}</small></span><span>${brl(u.valor)}</span>`,'uniformes','Nenhum uniforme registrado.')}`;
+}
+function painelOrc(titulo,desc,gasto,orc,campo,mes){
+  const alvo=S.filtro.time?esc(S.filtro.time):'Todos os times';
+  if(!(+orc)) return `<div class="orc"><h3>${titulo}, ${mes}</h3><div class="muted" style="font-size:.85rem">${desc}. ${alvo}.</div>
+    <div class="big" style="margin-top:8px">${brl(gasto)}</div><div class="muted">gastos no mês, sem orçamento definido</div>
+    <button class="lnk" onclick="editarOrcamento('${campo}')">Definir orçamento mensal</button></div>`;
+  const pct=Math.min(100,gasto/orc*100), sobra=orc-gasto;
+  return `<div class="orc"><h3>${titulo}, ${mes}</h3><div class="muted" style="font-size:.85rem">${desc}. ${alvo}.</div>
+    <div class="big" style="margin-top:8px">${brl(gasto)}</div><div class="muted">gastos de ${brl(orc)} disponíveis</div>
+    <div class="medidor"><i style="width:${pct}%;background:${pct>=100?'var(--der)':pct>80?'var(--emp)':'var(--vit)'}"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:.9rem"><span>${sobra>=0?'Disponível':'Acima do orçamento'}</span><b>${brl(Math.abs(sobra))}</b></div>
+    <button class="lnk" onclick="editarOrcamento('${campo}')">Alterar orçamento mensal</button></div>`;
 }
 function listaSimples(arr,fn,col,vazio){
   if(!arr.length) return `<div class="lst"><div class="vazio">${vazio}</div></div>`;
@@ -470,17 +540,9 @@ function perfil(){
    </div>
    <div class="dupla">
     <label>Ano de nascimento<select onchange="S.perfil.ano=+this.value;salvar();render()">${anos.map(a=>`<option ${a==p.ano?'selected':''}>${a}</option>`).join('')}</select></label>
-    <label>Categoria em ${ANO}<input value="${catAtual()}" readonly></label>
+    <label>Categoria em ${ANO}<select onchange="S.perfil.categoria=this.value;salvar();render()"><option value="" ${!p.categoria?'selected':''}>Automática (${catAuto()})</option>${listaCats().map(c=>`<option ${c===p.categoria?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
    </div>
    ${[0,1].map(i=>`<div class="dupla"><label>Responsável ${i+1}<input value="${esc(p.resp[i].nome)}" onchange="S.perfil.resp[${i}].nome=this.value;salvar()"></label><label>Telefone<input inputmode="tel" value="${esc(p.resp[i].tel)}" onchange="S.perfil.resp[${i}].tel=this.value;salvar()"></label></div>`).join('')}
-  </div>
-
-  <h2>Treinos</h2>
-  <div class="cx" style="padding:14px">
-   <div class="muted" style="font-size:.85rem;margin-bottom:6px">Dias de treino</div>
-   <div class="dias">${DIAS.map(d=>`<label><input type="checkbox" ${S.treinos.dias.includes(d)?'checked':''} onchange="diaTreino('${d}',this.checked)"><span>${d}</span></label>`).join('')}</div>
-   <label style="margin-top:12px">Horas por treino<select onchange="S.treinos.horas=+this.value;salvar();render()">${[0.5,1,1.5,2,2.5,3].map(h=>`<option value="${h}" ${h==S.treinos.horas?'selected':''}>${String(h).replace('.',',')}h</option>`).join('')}</select></label>
-   <div class="muted">${S.treinos.dias.length*S.treinos.horas} horas de treino por semana</div>
   </div>
 
   <div class="linha-t"><h2>Conquistas do time</h2><button class="lnk" onclick="formConq()">Adicionar</button></div>
@@ -499,7 +561,6 @@ function perfil(){
   <h2 id="conta">Conta e dados</h2>
   ${blocoConta()}`;
 }
-function diaTreino(d,on){ S.treinos.dias=on?[...new Set([...S.treinos.dias,d])]:S.treinos.dias.filter(x=>x!==d); S.treinos.dias.sort((a,b)=>DIAS.indexOf(a)-DIAS.indexOf(b)); salvar(); render(); }
 function carregarFoto(inp){
   const f=inp.files[0]; if(!f) return;
   const img=new Image(), r=new FileReader();
@@ -529,10 +590,12 @@ function passo(nome,valor){
 }
 function mudaPasso(b,d){ const o=b.parentNode.querySelector('output'); o.textContent=Math.max(0,(+o.textContent)+d); atualizaNota(); }
 
+function segTipo(a){ return `<div class="seg" style="margin:0 0 14px"><button type="button" aria-selected="${a==='jogo'}" onclick="abrirJogo('')">Jogo</button><button type="button" aria-selected="${a==='treino'}" onclick="abrirTreino('')">Treino</button></div>`; }
 function abrirJogo(id){
-  const j=id?S.jogos.find(x=>x.id===id):{id:'',time:S.filtro.time||S.listas.times[0]||'',adv:'',comp:'',data:hoje(),hora:'',local:'',mod:'Futsal',cat:catAtual(),gp:null,gc:null,gols:0,ast:0,def_:0,defd:0,min:0,destaque:false,fase:'',fotos:'',link:'',insc:0,arb:0,comb:0,est:0,alim:0,obs:'',status:'concluido'};
+  const j=id?S.jogos.find(x=>x.id===id):{goleiro:goleiro(),chutes:0,passes:0,recup:0,id:'',time:S.filtro.time||S.listas.times[0]||'',adv:'',comp:'',data:hoje(),hora:'',local:'',mod:'Futsal',cat:catAtual(),gp:null,gc:null,gols:0,ast:0,def_:0,defd:0,min:0,destaque:false,fase:'',fotos:'',link:'',insc:0,arb:0,comb:0,est:0,alim:0,obs:'',status:'concluido'};
   const v=x=>x==null?'':x;
-  abrirFolha(id?'Editar jogo':'Registrar jogo',`<form id="fj" onsubmit="salvarJogo(event,'${j.id}')">
+  abrirFolha(id?'Editar jogo':'Registrar',`<form id="fj" onsubmit="salvarJogo(event,'${j.id}')">
+  ${id?'':segTipo('jogo')}
   <fieldset><legend>Partida</legend>
    <label>Meu time<input name="time" list="dlT" required value="${esc(j.time)}"></label>
    <label>Adversário<input name="adv" list="dlE" required value="${esc(j.adv)}"></label>
@@ -540,8 +603,8 @@ function abrirJogo(id){
    <div class="dupla"><label>Data<input type="date" name="data" required value="${esc(j.data)}"></label><label>Hora<input type="time" name="hora" value="${esc(j.hora)}"></label></div>
    <label>Local<input name="local" list="dlL" value="${esc(j.local)}"></label>
    <div class="tripla">
-    <label>Modalidade<select name="mod">${['Futsal','Fut7','Campo'].map(x=>`<option ${x===j.mod?'selected':''}>${x}</option>`).join('')}</select></label>
-    <label>Categoria<select name="cat">${S.listas.categorias.map(x=>`<option ${x===j.cat?'selected':''}>${x}</option>`).join('')}</select></label>
+    <label>Modalidade<select name="mod">${[...new Set([...MODS,j.mod].filter(Boolean))].map(x=>`<option ${x===j.mod?'selected':''}>${x}</option>`).join('')}</select></label>
+    <label>Categoria<select name="cat">${listaCats([j.cat]).map(x=>`<option ${x===j.cat?'selected':''}>${x}</option>`).join('')}</select></label>
     <label>Fase<select name="fase">${[...new Set([...FASES,j.fase])].map(x=>`<option ${x===j.fase?'selected':''} value="${esc(x)}">${x||'Não informada'}</option>`).join('')}</select></label>
    </div>
    <label class="chk"><input type="checkbox" name="agendado" ${j.status==='agendado'?'checked':''} onchange="document.getElementById('blocoRes').hidden=this.checked"> Jogo ainda não aconteceu</label>
@@ -557,8 +620,10 @@ function abrirJogo(id){
   </fieldset>
   <fieldset><legend>Desempenho de ${esc(S.perfil.nome)}</legend>
    <div class="tripla"><label>Gols${passo('gols',j.gols)}</label><label>Assistências${passo('ast',j.ast)}</label><label>Minutos${passo('min',j.min)}</label></div>
-   ${goleiro()?`<div class="dupla"><label>Defesas${passo('def_',j.def_)}</label><label>Defesas difíceis${passo('defd',j.defd)}</label></div>`:''}
-   <label class="chk"><input type="checkbox" name="destaque" ${j.destaque?'checked':''} onchange="atualizaNota()"> Destaque do jogo</label>
+   <div class="tripla"><label>Chutes a gol${passo('chutes',j.chutes)}</label><label>Passes certos${passo('passes',j.passes)}</label><label>Bolas recuperadas${passo('recup',j.recup)}</label></div>
+   <label class="chk"><input type="checkbox" name="goleiro" ${j.goleiro?'checked':''} onchange="document.getElementById('blocoGol').hidden=!this.checked;atualizaNota()"> Jogou como goleiro</label>
+   <div class="dupla" id="blocoGol" ${j.goleiro?'':'hidden'}><label>Defesas${passo('def_',j.def_)}</label><label>Defesas difíceis${passo('defd',j.defd)}</label></div>
+   <label class="chk"><input type="checkbox" name="destaque" ${j.destaque?'checked':''} onchange="atualizaNota()"> Craque do jogo</label>
    <div class="nota-prev" id="notaPrev" aria-live="polite"></div>
   </fieldset>
   </div>
@@ -580,7 +645,7 @@ function abrirJogo(id){
 function atualizaNota(){
   const f=$('#fj'), el=$('#notaPrev'); if(!f||!el) return;
   const g=n=>+(f.querySelector(`output[data-n="${n}"]`)?.textContent||0);
-  const j={status:'concluido',gp:f.gp.value===''?null:+f.gp.value,gc:f.gc.value===''?null:+f.gc.value,gols:g('gols'),ast:g('ast'),min:g('min'),def_:g('def_'),defd:g('defd'),destaque:f.destaque.checked};
+  const j={status:'concluido',gp:f.gp.value===''?null:+f.gp.value,gc:f.gc.value===''?null:+f.gc.value,gols:g('gols'),ast:g('ast'),min:g('min'),chutes:g('chutes'),passes:g('passes'),recup:g('recup'),goleiro:f.goleiro.checked,def_:g('def_'),defd:g('defd'),destaque:f.destaque.checked};
   const n=calcNota(j);
   el.innerHTML=n?`<span class="nota ${clsNota(n.v)}">${fNota(n.v)}</span><ul>${n.it.map(([l,v])=>`<li><span>${l}</span><span>${l==='Base'?fNota(v):(v>0?'+':'')+fNota(v)}</span></li>`).join('')}</ul>`
     :`<span class="muted" style="font-size:.9rem">Informe o placar para calcular a nota do jogo.</span>`;
@@ -598,7 +663,7 @@ function salvarJogo(ev,id){
   const j={id:id||'j'+uid(),time:f.time.value.trim(),adv:f.adv.value.trim(),comp:f.comp.value.trim(),data:f.data.value,hora:f.hora.value,local:f.local.value.trim(),
     mod:f.mod.value,cat:f.cat.value,fase:f.fase.value,status:ag?'agendado':'concluido',
     gp:ag||f.gp.value===''?null:+f.gp.value,gc:ag||f.gc.value===''?null:+f.gc.value,
-    gols:ag?0:g('gols'),ast:ag?0:g('ast'),min:ag?0:g('min'),def_:ag?0:g('def_'),defd:ag?0:g('defd'),destaque:!ag&&f.destaque.checked,
+    gols:ag?0:g('gols'),ast:ag?0:g('ast'),min:ag?0:g('min'),chutes:ag?0:g('chutes'),passes:ag?0:g('passes'),recup:ag?0:g('recup'),goleiro:!ag&&f.goleiro.checked,def_:ag||!f.goleiro.checked?0:g('def_'),defd:ag||!f.goleiro.checked?0:g('defd'),destaque:!ag&&f.destaque.checked,
     insc:num(f.insc.value),arb:num(f.arb.value),comb:num(f.comb.value),est:num(f.est.value),alim:num(f.alim.value),
     fotos:f.fotos.value,link:f.link.value,obs:f.obs.value,temporada:+f.data.value.slice(0,4)};
   if(!ag&&(j.gp==null||j.gc==null)){aviso('Informe o placar ou marque como jogo futuro');return;}
@@ -606,6 +671,32 @@ function salvarJogo(ev,id){
   const i=S.jogos.findIndex(x=>x.id===id); if(i>=0)S.jogos[i]=j; else S.jogos.push(j);
   salvar(); fecharFolha(); render(); aviso(id?'Jogo atualizado':'Jogo registrado');
 }
+function abrirTreino(id){
+  const t=id?S.treinosReg.find(x=>x.id===id):{id:'',time:S.filtro.time||S.listas.times[0]||'',data:hoje(),mod:'Futsal',cat:catAtual(),horas:1,obs:''};
+  const hs=[0.5,1,1.5,2,2.5,3,3.5,4];
+  abrirFolha(id?'Editar treino':'Registrar',`<form id="ft" onsubmit="salvarTreino(event,'${t.id}')">
+   ${id?'':segTipo('treino')}
+   <label>Time<input name="time" list="dlT" required value="${esc(t.time)}"></label>
+   <label>Data<input type="date" name="data" required value="${esc(t.data)}"></label>
+   <div class="dupla">
+    <label>Modalidade<select name="mod">${[...new Set([...MODS,t.mod].filter(Boolean))].map(x=>`<option ${x===t.mod?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+    <label>Categoria<select name="cat">${listaCats([t.cat]).map(x=>`<option ${x===t.cat?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+   </div>
+   <label>Horas de treino<select name="horas">${[...new Set([...hs,+t.horas])].sort((a,b)=>a-b).map(x=>`<option value="${x}" ${x==t.horas?'selected':''}>${fHoras(x)}</option>`).join('')}</select></label>
+   <label>Observações<textarea name="obs" rows="2">${esc(t.obs)}</textarea></label>
+   <div class="acoes"><button class="btn">${id?'Salvar alterações':'Registrar treino'}</button>
+   ${id?`<button type="button" class="btn perigo" onclick="excluirTreino('${id}')">Excluir treino</button>`:''}</div>
+   ${dl('dlT',S.listas.times)}
+  </form>`);
+}
+function salvarTreino(ev,id){
+  ev.preventDefault(); const f=ev.target;
+  const t={id:id||'t'+uid(),time:f.time.value.trim(),data:f.data.value,mod:f.mod.value,cat:f.cat.value,horas:num(f.horas.value),obs:f.obs.value.trim()};
+  addLista('times',t.time);
+  const i=S.treinosReg.findIndex(x=>x.id===id); if(i>=0)S.treinosReg[i]=t; else S.treinosReg.push(t);
+  salvar(); fecharFolha(); render(); aviso(id?'Treino atualizado':'Treino registrado');
+}
+function excluirTreino(id){ if(!confirm('Excluir este treino?'))return; S.treinosReg=S.treinosReg.filter(t=>t.id!==id); salvar(); fecharFolha(); render(); aviso('Treino excluído'); }
 function excluirJogo(id){ if(!confirm('Excluir este jogo?'))return; S.jogos=S.jogos.filter(j=>j.id!==id); salvar(); fecharFolha(); render(); aviso('Jogo excluído'); }
 
 function formGen(titulo,campos,onSave){
@@ -641,9 +732,12 @@ async function salvarFoto(ev){
 }
 function formLista(k,n){ formGen('Adicionar em '+n,`<label>Nome<input name="v" required></label><div class="muted" style="font-size:.85rem">Itens atuais: ${S.listas[k].slice(0,8).map(esc).join(', ')}${S.listas[k].length>8?'…':''}</div>`,
   f=>{addLista(k,f.v.value);aviso('Item adicionado');}); }
-function editarOrcamento(){ formGen('Orçamento mensal',`<label>Valor disponível por mês (R$)<input name="v" inputmode="decimal" required value="${S.orcamento}"></label>`,f=>{S.orcamento=num(f.v.value);aviso('Orçamento atualizado');}); }
-
-
+function editarOrcamento(campo){
+  const k=S.filtro.time||'', o=S.orcamentos[k]||{jogos:0,fixos:0};
+  formGen('Orçamento mensal',`<div class="muted" style="font-size:.9rem;margin-bottom:10px">${campo==='jogos'?'Jogos e logística':'Mensalidades e uniformes'}, ${k?esc(k):'todos os times'}</div>
+    <label>Valor disponível por mês (R$)<input name="v" inputmode="decimal" required value="${o[campo]||''}"></label>`,
+    f=>{S.orcamentos[k]={...o,[campo]:num(f.v.value)};aviso('Orçamento atualizado');});
+}
 /* ===================== GOOGLE DRIVE / SHEETS ===================== */
 // Cole aqui o Client ID OAuth (tipo "Aplicativo da Web") criado no Google Cloud.
 // Também é possível informar pelo próprio app, na tela de login ou em Atleta > Conta.
@@ -686,15 +780,16 @@ async function api(url,opts={}){
 
 /* estrutura da planilha */
 const TAB={
-  'Jogos':{col:'jogos',cols:[['id','ID'],['data','Data','d'],['hora','Hora','h'],['time','Time'],['adv','Adversário'],['comp','Competição'],['local','Local'],['mod','Modalidade'],['cat','Categoria'],['fase','Fase'],['status','Status','s'],['gp','Gols meu time','nn'],['gc','Gols adversário','nn'],['_res','Resultado','x'],['gols','Gols','n'],['ast','Assistências','n'],['min','Minutos','n'],['def_','Defesas','n'],['defd','Defesas difíceis','n'],['destaque','Destaque','b'],['_nota','Nota','x'],['insc','Inscrição','n'],['arb','Arbitragem','n'],['comb','Combustível','n'],['est','Estacionamento','n'],['alim','Alimentação','n'],['_custo','Custo total','x'],['fotos','Link fotos'],['link','Link jogo'],['obs','Observações']]},
+  'Jogos':{col:'jogos',cols:[['id','ID'],['data','Data','d'],['hora','Hora','h'],['time','Time'],['adv','Adversário'],['comp','Competição'],['local','Local'],['mod','Modalidade'],['cat','Categoria'],['fase','Fase'],['status','Status','s'],['gp','Gols meu time','nn'],['gc','Gols adversário','nn'],['_res','Resultado','x'],['gols','Gols','n'],['ast','Assistências','n'],['min','Minutos','n'],['chutes','Chutes a gol','n'],['passes','Passes certos','n'],['recup','Bolas recuperadas','n'],['goleiro','Goleiro','b'],['def_','Defesas','n'],['defd','Defesas difíceis','n'],['destaque','Destaque','b'],['_nota','Nota','x'],['insc','Inscrição','n'],['arb','Arbitragem','n'],['comb','Combustível','n'],['est','Estacionamento','n'],['alim','Alimentação','n'],['_custo','Custo total','x'],['fotos','Link fotos'],['link','Link jogo'],['obs','Observações']]},
   'Mensalidades':{col:'mensalidades',cols:[['id','ID'],['mes','Mês','m'],['time','Time'],['valor','Valor','n']]},
   'Logística':{col:'logistica',cols:[['id','ID'],['data','Data','d'],['tipo','Tipo'],['valor','Valor','n'],['time','Time'],['desc','Descrição']]},
   'Uniformes':{col:'uniformes',cols:[['id','ID'],['data','Data','d'],['tipo','Tipo'],['valor','Valor','n'],['time','Time']]},
   'Conquistas':{col:'conquistas',cols:[['id','ID'],['camp','Campeonato'],['posicao','Colocação'],['temporada','Temporada'],['time','Time']]},
   'Prêmios':{col:'individuais',cols:[['id','ID'],['premio','Prêmio'],['camp','Campeonato'],['time','Time']]},
-  'Fotos':{col:'fotosEspeciais',cols:[['id','ID'],['titulo','Título'],['url','Link']]}
+  'Fotos':{col:'fotosEspeciais',cols:[['id','ID'],['titulo','Título'],['url','Link']]},
+  'Treinos':{col:'treinosReg',cols:[['id','ID'],['data','Data','d'],['time','Time'],['mod','Modalidade'],['cat','Categoria'],['horas','Horas','n'],['obs','Observações']]}
 };
-const ABAS=[...Object.keys(TAB),'Cadastro','Listas'];
+const ABAS=[...Object.keys(TAB),'Cadastro','Listas','Orçamentos'];
 const LISTAS=[['times','Meus times'],['competicoes','Competições'],['locais','Locais'],['equipes','Adversários'],['categorias','Categorias']];
 const rng=n=>`'${n}'!A1:AZ`;
 
@@ -734,7 +829,7 @@ function deLinhas(t,vals){
       const v=idx[h]==null?'':(r[idx[h]]??'');
       o[k]= tp==='n'?(+String(v).replace(',','.')||0)
           : tp==='nn'?(v===''?null:+String(v).replace(',','.'))
-          : tp==='b'?(v===true||/^s/i.test(String(v)))
+          : tp==='b'?(idx[h]==null?undefined:(v===true||/^s/i.test(String(v))))
           : tp==='s'?(/agend|não/i.test(String(v))?'agendado':'concluido')
           : tp==='d'?lerData(v) : tp==='h'?lerHora(v) : tp==='m'?lerMes(v) : String(v);
     });
@@ -745,9 +840,9 @@ function deLinhas(t,vals){
 }
 function cadastroLinhas(){
   const p=S.perfil;
-  return [['Campo','Valor'],['Nome',p.nome],['Número',p.numero],['Posição',p.posicao],['Ano de nascimento',p.ano],['Categoria atual',catAtual()],
+  return [['Campo','Valor'],['Nome',p.nome],['Número',p.numero],['Posição',p.posicao],['Ano de nascimento',p.ano],['Categoria',p.categoria||''],['Categoria atual',catAtual()],
     ['Responsável 1',p.resp[0].nome],['Telefone 1',p.resp[0].tel],['Responsável 2',p.resp[1].nome],['Telefone 2',p.resp[1].tel],
-    ['Dias de treino',S.treinos.dias.join(', ')],['Horas por treino',S.treinos.horas],['Orçamento mensal',S.orcamento],['Foto',p.foto||'']];
+    ['Foto',p.foto||'']];
 }
 function deCadastro(vals){
   const m={}; (vals||[]).slice(1).forEach(r=>m[String(r[0]).trim()]=r[1]??'');
@@ -757,9 +852,16 @@ function deCadastro(vals){
   p.ano=+m['Ano de nascimento']||p.ano;
   p.resp=[{nome:String(m['Responsável 1']||''),tel:String(m['Telefone 1']||'')},{nome:String(m['Responsável 2']||''),tel:String(m['Telefone 2']||'')}];
   p.foto=String(m['Foto']||'');
-  S.treinos.dias=String(m['Dias de treino']||'').split(',').map(s=>s.trim()).filter(d=>DIAS.includes(d));
-  S.treinos.horas=+String(m['Horas por treino']).replace(',','.')||1;
-  S.orcamento=+String(m['Orçamento mensal']).replace(',','.')||0;
+  if(m['Categoria']!==undefined) p.categoria=String(m['Categoria']||'');
+  if(m['Orçamento mensal']!==undefined) S.orcamento=+String(m['Orçamento mensal']).replace(',','.')||0;
+}
+function orcLinhas(){
+  return [['Time','Jogos e logística','Mensalidades e uniformes'],...Object.entries(S.orcamentos).map(([k,v])=>[k||'Todos',+v.jogos||0,+v.fixos||0])];
+}
+function deOrc(vals){
+  if(!vals||vals.length<2) return;
+  const o={}; vals.slice(1).forEach(r=>{ if(r[0]===''||r[0]==null) return; const k=String(r[0]).trim()==='Todos'?'':String(r[0]).trim(); o[k]={jogos:+String(r[1]??0).replace(',','.')||0,fixos:+String(r[2]??0).replace(',','.')||0}; });
+  if(Object.keys(o).length) S.orcamentos=o;
 }
 function listasLinhas(){
   const mx=Math.max(...LISTAS.map(([k])=>S.listas[k].length));
@@ -798,19 +900,20 @@ async function garantirAbas(){
   if(falta.length) await api(`${SHEETS}/${CFG.sheetId}:batchUpdate`,{method:'POST',body:JSON.stringify({requests:falta.map(t=>({addSheet:{properties:{title:t,gridProperties:{frozenRowCount:1}}}}))})});
 }
 async function enviar(){
-  const id=CFG.sheetId;
+  const id=CFG.sheetId; await garantirAbas();
   await api(`${SHEETS}/${id}/values:batchClear`,{method:'POST',body:JSON.stringify({ranges:ABAS.map(rng)})});
   await api(`${SHEETS}/${id}/values:batchUpdate`,{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:[
     ...Object.entries(TAB).map(([n,t])=>({range:`'${n}'!A1`,values:paraLinhas(t)})),
-    {range:"'Cadastro'!A1",values:cadastroLinhas()},{range:"'Listas'!A1",values:listasLinhas()}]})});
+    {range:"'Cadastro'!A1",values:cadastroLinhas()},{range:"'Listas'!A1",values:listasLinhas()},{range:"'Orçamentos'!A1",values:orcLinhas()}]})});
   CFG.ultimaSync=Date.now(); salvarCfg();
 }
 async function baixar(){
+  await garantirAbas();
   const q=ABAS.map(n=>'ranges='+encodeURIComponent(rng(n))).join('&');
   const r=await api(`${SHEETS}/${CFG.sheetId}/values:batchGet?${q}&valueRenderOption=UNFORMATTED_VALUE`);
   const v={}; r.valueRanges.forEach((vr,i)=>v[ABAS[i]]=vr.values||[]);
   Object.entries(TAB).forEach(([n,t])=>{S[t.col]=deLinhas(t,v[n]);});
-  deCadastro(v['Cadastro']); deListas(v['Listas']);
+  deCadastro(v['Cadastro']); deListas(v['Listas']); deOrc(v['Orçamentos']); normalizar();
   localStorage.setItem(KEY,JSON.stringify(S)); CFG.ultimaSync=Date.now(); salvarCfg();
 }
 
